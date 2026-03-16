@@ -1,7 +1,7 @@
 // Configuration
 const CLIENT_ID = "1329184069426348052";
-const WS_URL = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
-const API_BASE = `${window.location.origin}/api`;
+const WS_URL = "wss://resentfully-unmourned-yasmine.ngrok-free.dev/ws";
+const API_BASE = "https://resentfully-unmourned-yasmine.ngrok-free.dev/api";
 
 // State
 let ws = null;
