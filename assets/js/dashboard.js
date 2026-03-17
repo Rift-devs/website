@@ -179,13 +179,19 @@ function initTabs() {
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             document.getElementById(target).classList.add('active');
 
-            const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm', moderation: 'Moderation & Analytics', settings: 'Settings' };
+            const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm',
+                             moderation: 'Moderation & Analytics', settings: 'Settings' };
             document.getElementById('activeTabTitle').textContent = titles[target] || target;
 
-            if (target === 'stocks' && typeof window.initStocks === 'function') window.initStocks();
-            if (target === 'lastfm' && typeof window.initLastfm === 'function') window.initLastfm();
+            // Sync mobile bottom nav highlight
+            document.querySelectorAll('.mobile-tab[data-maintab]').forEach(t => {
+                t.classList.toggle('active', t.dataset.maintab === target);
+            });
+
+            if (target === 'stocks'     && typeof window.initStocks     === 'function') window.initStocks();
+            if (target === 'lastfm'     && typeof window.initLastfm     === 'function') window.initLastfm();
             if (target === 'moderation' && typeof window.initModeration === 'function') window.initModeration();
-            if (target === 'settings' && typeof window.initSettings === 'function') window.initSettings();
+            if (target === 'settings'   && typeof window.initSettings   === 'function') window.initSettings();
 
             if (window.innerWidth <= 768) closeSidebar();
         });
@@ -1071,17 +1077,12 @@ setInterval(() => {
 }, 7000);
 
 /* ================= CHOSEN FOR YOU ================= */
-const CFY_SEEDS = [
-    { q: 'chill lofi beats', label: 'Lofi Chill' },
+const CFY_FALLBACK_SEEDS = [
+    { q: 'chill lofi beats', label: 'Lofi' },
     { q: 'phonk drift playlist', label: 'Phonk' },
     { q: 'synthwave retrowave mix', label: 'Synthwave' },
-    { q: 'hype rap playlist 2024', label: 'Hype Rap' },
-    { q: 'bedroom pop indie playlist', label: 'Indie Pop' },
-    { q: 'dark ambient focus', label: 'Dark Ambient' },
-    { q: 'k-pop bops playlist', label: 'K-Pop' },
-    { q: 'hip hop boom bap classic', label: 'Boom Bap' },
-    { q: 'jazz coffee shop background', label: 'Jazz' },
-    { q: 'metal core heavy mix', label: 'Metal' },
+    { q: 'hype rap playlist', label: 'Rap' },
+    { q: 'bedroom pop indie playlist', label: 'Indie' },
 ];
 
 async function loadChosenForYou() {
@@ -1089,11 +1090,28 @@ async function loadChosenForYou() {
     const scroll = document.getElementById('cfyScroll');
     if (!scroll) return;
 
-    // Pick 5 random seeds
-    const picks = [...CFY_SEEDS].sort(() => Math.random() - 0.5).slice(0, 5);
-    const results = [];
+    // Try to get personalised seeds from Last.fm top artists
+    let seeds = [];
+    if (userProfile?.id) {
+        try {
+            const res = await fetch(`${API_BASE}/lastfm/topartists/${userProfile.id}?period=1month`, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
+            const data = await res.json();
+            if (data.artists?.length) {
+                // Pick 5 random from top 10 to keep it fresh
+                const pool = data.artists.slice(0, 10);
+                const picked = pool.sort(() => Math.random() - 0.5).slice(0, 5);
+                seeds = picked.map(a => ({ q: a.name, label: a.name }));
+            }
+        } catch(_) {}
+    }
 
-    await Promise.all(picks.map(async (seed) => {
+    // Fall back to genre seeds if no Last.fm
+    if (!seeds.length) seeds = [...CFY_FALLBACK_SEEDS].sort(() => Math.random() - 0.5).slice(0, 5);
+
+    const results = [];
+    await Promise.all(seeds.map(async (seed) => {
         try {
             const res = await fetch(`${API_BASE}/music/search`, {
                 method: 'POST',
@@ -1103,7 +1121,6 @@ async function loadChosenForYou() {
             const data = await res.json();
             const tracks = data.results || [];
             if (tracks.length) {
-                // Pick a random one from top 5
                 const t = tracks[Math.floor(Math.random() * Math.min(tracks.length, 5))];
                 results.push({ ...t, genre: seed.label });
             }

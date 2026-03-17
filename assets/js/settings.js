@@ -188,16 +188,29 @@ window.triggerBgUpload = function() {
 window.handleBgUpload = function(input) {
     const file = input.files[0];
     if (!file) return;
+    // Compress large images before storing
+    const img = new Image();
     const reader = new FileReader();
     reader.onload = e => {
-        const dataUrl = e.target.result;
-        localStorage.setItem('rift_bg_image', dataUrl);
-        applyBg('custom-img');
-        _prefs.bg = 'custom-img';
-        scheduleSave();
-        document.querySelectorAll('.bg-opt').forEach(b => b.classList.remove('active'));
-        const customBtn = document.querySelector('.bg-opt[data-bg="custom-img"]');
-        if (customBtn) customBtn.classList.add('active');
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX = 1280;
+            const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+            canvas.width  = Math.round(img.width  * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            // Save to prefs so it syncs cross-device
+            _prefs.bgImage = dataUrl;
+            _prefs.bg = 'custom-img';
+            scheduleSave();
+            localStorage.setItem('rift_bg_image', dataUrl);
+            applyBg('custom-img');
+            document.querySelectorAll('.bg-opt').forEach(b => b.classList.remove('active'));
+            const customBtn = document.querySelector('.bg-opt[data-bg="custom-img"]');
+            if (customBtn) customBtn.classList.add('active');
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 };
@@ -245,7 +258,7 @@ function applyBg(style) {
         body.style.backgroundImage = 'none';
 
     } else if (style === 'custom-img') {
-        const img = localStorage.getItem('rift_bg_image');
+        const img = _prefs.bgImage || localStorage.getItem('rift_bg_image');
         if (img) {
             body.style.backgroundImage = `url(${img})`;
             body.style.backgroundSize = 'cover';

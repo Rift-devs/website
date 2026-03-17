@@ -80,19 +80,27 @@
                 </div>
             </header>
 
-            <!-- Mobile bottom tab bar -->
-            <nav class="mobile-tab-bar">
-                <button class="mobile-tab active" data-tab="music" onclick="switchMobileTab('music', this)">
+            <!-- Mobile bottom nav — main tab switcher on mobile -->
+            <nav class="mobile-tab-bar" id="mobileTabBar">
+                <button class="mobile-tab active" data-maintab="music" onclick="mobileSwitchTab('music',this)">
                     <i class="fa-solid fa-music"></i>
-                    <span>Player</span>
+                    <span>Music</span>
                 </button>
-                <button class="mobile-tab" data-tab="mobile-lyrics" onclick="switchMobileTab('mobile-lyrics', this)">
-                    <i class="fa-solid fa-microphone-lines"></i>
-                    <span>Lyrics</span>
+                <button class="mobile-tab" data-maintab="stocks" onclick="mobileSwitchTab('stocks',this)">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Stocks</span>
                 </button>
-                <button class="mobile-tab" data-tab="mobile-queue" onclick="switchMobileTab('mobile-queue', this)">
-                    <i class="fa-solid fa-list"></i>
-                    <span>Queue</span>
+                <button class="mobile-tab" data-maintab="lastfm" onclick="mobileSwitchTab('lastfm',this)">
+                    <i class="fa-solid fa-headphones"></i>
+                    <span>Last.fm</span>
+                </button>
+                <button class="mobile-tab" data-maintab="moderation" onclick="mobileSwitchTab('moderation',this)">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Mod</span>
+                </button>
+                <button class="mobile-tab" data-maintab="settings" onclick="mobileSwitchTab('settings',this)">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings</span>
                 </button>
             </nav>
 
@@ -114,6 +122,19 @@
                                 <div class="cfy-skeleton"></div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Mobile music sub-tabs (player / lyrics / queue) — mobile only -->
+                    <div class="mobile-music-tabs" id="mobileMusicTabs">
+                        <button class="mob-music-tab active" onclick="switchMusicPanel('player',this)">
+                            <i class="fa-solid fa-play"></i> Player
+                        </button>
+                        <button class="mob-music-tab" onclick="switchMusicPanel('lyrics',this)">
+                            <i class="fa-solid fa-microphone-lines"></i> Lyrics
+                        </button>
+                        <button class="mob-music-tab" onclick="switchMusicPanel('queue',this)">
+                            <i class="fa-solid fa-list"></i> Queue
+                        </button>
                     </div>
 
                     <div class="music-layout" id="musicLayout">
@@ -1072,31 +1093,69 @@
             document.getElementById('sidebarOverlay').classList.remove('active');
             document.body.style.overflow = '';
         }
-        function switchMobileTab(tab, btn) {
-            // Update bottom tab active state
+
+        // Mobile: switch main tabs via bottom nav
+        window.mobileSwitchTab = function(tab, btn) {
+            if (window.innerWidth > 768) return;
+            // Activate section
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            const section = document.getElementById(tab);
+            if (section) section.classList.add('active');
+            // Update bottom nav
             document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
+            if (btn) btn.classList.add('active');
+            // Update top bar title
+            const titles = { music:'Music Player', stocks:'Stock Market', lastfm:'Last.fm',
+                             moderation:'Moderation & Analytics', settings:'Settings' };
+            const titleEl = document.getElementById('activeTabTitle');
+            if (titleEl) titleEl.textContent = titles[tab] || tab;
+            // Fire init hooks
+            if (tab === 'stocks'     && typeof window.initStocks     === 'function') window.initStocks();
+            if (tab === 'lastfm'     && typeof window.initLastfm     === 'function') window.initLastfm();
+            if (tab === 'moderation' && typeof window.initModeration === 'function') window.initModeration();
+            if (tab === 'settings'   && typeof window.initSettings   === 'function') window.initSettings();
+            // Also sync desktop sidebar nav highlight
+            document.querySelectorAll('.nav-links li').forEach(l => {
+                l.classList.toggle('active', l.dataset.tab === tab);
+            });
+            // Reset music sub-tab to player when switching back
+            if (tab === 'music') switchMusicPanel('player', document.querySelector('.mob-music-tab'));
+        };
 
-            // On mobile, show/hide the three panels
-            const player  = document.querySelector('.player-main');
-            const lyrics  = document.querySelector('.lyrics-panel');
-            const queue   = document.querySelector('.music-sidebar');
-
-            if (window.innerWidth <= 768) {
-                player.style.display  = tab === 'music'          ? 'flex' : 'none';
-                lyrics.style.display  = tab === 'mobile-lyrics'  ? 'flex' : 'none';
-                queue.style.display   = tab === 'mobile-queue'   ? 'flex' : 'none';
-            }
-        }
+        // Mobile: switch music sub-panels
+        window.switchMusicPanel = function(panel, btn) {
+            const player = document.getElementById('panelPlayer');
+            const lyrics = document.getElementById('panelLyrics');
+            const queue  = document.getElementById('panelQueue');
+            const resL   = document.getElementById('resizerLeft');
+            const resR   = document.getElementById('resizerRight');
+            if (window.innerWidth > 768) return;
+            [player, lyrics, queue, resL, resR].forEach(el => el && (el.style.display = 'none'));
+            if (panel === 'player') { if (player) player.style.display = 'flex'; }
+            if (panel === 'lyrics') { if (lyrics) lyrics.style.display = 'flex'; }
+            if (panel === 'queue')  { if (queue)  queue.style.display  = 'flex'; }
+            document.querySelectorAll('.mob-music-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        };
 
         // On resize, restore desktop layout
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
-                document.querySelector('.player-main').style.display  = '';
-                document.querySelector('.lyrics-panel').style.display = '';
-                document.querySelector('.music-sidebar').style.display = '';
+                const player = document.getElementById('panelPlayer');
+                const lyrics = document.getElementById('panelLyrics');
+                const queue  = document.getElementById('panelQueue');
+                const resL   = document.getElementById('resizerLeft');
+                const resR   = document.getElementById('resizerRight');
+                [player, lyrics, queue, resL, resR].forEach(el => el && (el.style.display = ''));
                 closeSidebar();
             }
         });
+
+        // Init: on mobile, hide lyrics/queue panels by default
+        if (window.innerWidth <= 768) {
+            document.addEventListener('DOMContentLoaded', () => {
+                switchMusicPanel('player', document.querySelector('.mob-music-tab'));
+            });
+        }
     </script>
 </html>

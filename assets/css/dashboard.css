@@ -4600,3 +4600,268 @@ input[type="range"]::-webkit-slider-thumb:hover {
     .settings-row { flex-direction: column; align-items: flex-start; gap: 10px; }
     .settings-slider-wrap { width: 100%; }
 }
+
+/* ═══════════════════════════════════════════
+   MOBILE MUSIC SUB-TABS
+═══════════════════════════════════════════ */
+.mobile-music-tabs {
+    display: none; /* shown only on mobile via media query */
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.mob-music-tab {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: 0.15s;
+    font-family: 'Outfit', sans-serif;
+}
+
+.mob-music-tab.active {
+    background: rgba(114,137,218,0.15);
+    border-color: rgba(114,137,218,0.35);
+    color: var(--primary);
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE — COMPLETE REDESIGN ≤768px
+═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* ── Layout foundation ─────────────────── */
+    body { overflow: hidden; }
+
+    .glass-container { flex-direction: column; }
+
+    .sidebar {
+        position: fixed;
+        left: -290px;
+        top: 0; bottom: 0;
+        width: 270px;
+        z-index: 200;
+        transition: left 0.3s cubic-bezier(0.25,1,0.5,1);
+        padding: 24px 18px;
+    }
+    .sidebar.open { left: 0; }
+    .sidebar-close { display: block; }
+    .sidebar-header .logo { margin-bottom: 28px; }
+    .hamburger { display: flex; }
+
+    .content-scroll-area {
+        padding: 0 12px 72px;
+        overflow-y: auto;
+        height: calc(100dvh - 58px - 62px);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .top-bar { padding: 12px 14px; }
+    .top-bar h1 { font-size: 17px; }
+
+    /* ── Mobile bottom nav ─────────────────── */
+    .mobile-tab-bar {
+        display: flex;
+        height: 62px;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .mobile-tab { font-size: 9px; gap: 2px; }
+    .mobile-tab i { font-size: 17px; }
+
+    /* ── Music sub-tabs ────────────────────── */
+    .mobile-music-tabs { display: flex; }
+
+    /* ── Music layout ──────────────────────── */
+    .music-layout {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        gap: 0;
+        overflow: visible;
+    }
+
+    .panel-resizer { display: none; }
+
+    #panelPlayer {
+        width: 100% !important;
+        min-width: unset;
+        max-width: unset;
+        flex: none;
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #panelLyrics {
+        width: 100% !important;
+        flex: none;
+        height: calc(100dvh - 190px);
+        border-radius: 16px;
+        padding: 14px;
+        display: none; /* shown by switchMusicPanel */
+    }
+
+    #panelQueue {
+        width: 100% !important;
+        flex: none;
+        height: calc(100dvh - 190px);
+        border-radius: 16px;
+        padding: 14px;
+        display: none; /* shown by switchMusicPanel */
+    }
+
+    /* CFY bar horizontal scroll on mobile */
+    .cfy-bar {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    .cfy-label span { display: none; } /* just icon on mobile */
+    .cfy-card { width: 100px; }
+    .cfy-art  { width: 100px; height: 75px; }
+
+    /* Compact now playing */
+    .now-playing-compact {
+        gap: 14px;
+        padding: 8px 0 12px;
+    }
+    .album-art-compact { width: 76px; height: 76px; border-radius: 12px; }
+    .track-details-compact h2 { font-size: 15px; }
+    .track-details-compact p  { font-size: 12px; }
+
+    /* Controls */
+    .player-controls { gap: 12px; }
+    .control-buttons { gap: 14px; justify-content: center; }
+    .btn-main { width: 48px; height: 48px; font-size: 18px; }
+    .btn-icon.btn-sm { font-size: 16px; }
+    .ctrl-tooltip { display: none; }
+    .volume-control { gap: 8px; }
+
+    /* Player top row */
+    .player-top-row { gap: 8px; margin-bottom: 10px; }
+    .fix-audio-btn span { display: none; }
+    .fix-audio-btn { padding: 8px 10px; }
+
+    /* ── Stocks tab ────────────────────────── */
+    .stocks-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+    }
+    .stocks-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .market-table-header,
+    .market-row {
+        grid-template-columns: 48px 1fr 78px 68px;
+    }
+    .market-sector-tag, .market-trend { display: none; }
+    .stock-chart-card canvas { height: 140px !important; }
+
+    /* ── Last.fm tab ───────────────────────── */
+    .lastfm-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+    }
+    .lastfm-sidebar { flex-direction: column; }
+    .lastfm-heatmap-card { padding: 14px; }
+    .lastfm-profile-inner { flex-direction: column; align-items: flex-start; }
+    .lastfm-profile-stats { gap: 8px; }
+    .lastfm-chart-card canvas { max-height: 160px; }
+
+    /* ── Moderation tab ────────────────────── */
+    .mod-layout {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .mod-right {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .mod-stats-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .mod-stats-row .mod-stat-card:nth-child(n+4) { display: none; } /* hide last 2 on tiny */
+    .mod-stat-card { padding: 10px 12px; }
+    .mod-stat-val { font-size: 18px; }
+    .mod-action-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .mod-log-section { padding: 14px; }
+    .mod-log-row {
+        grid-template-columns: 80px 1fr;
+        font-size: 11px;
+    }
+    .mod-log-target, .mod-log-mod, .mod-log-time, .mod-log-reason { }
+    .mod-log-mod, .mod-log-time { display: none; }
+    .mod-log-filters { flex-wrap: wrap; gap: 6px; }
+    .mod-filter-input { width: 100%; }
+    .mod-autocomplete { width: calc(100vw - 48px); }
+    .mod-user-header { gap: 10px; }
+    .mod-user-avatar { width: 48px; height: 48px; }
+    .mod-user-display { font-size: 15px; }
+
+    /* Analytics mobile */
+    .analytics-section { padding: 14px; }
+    .analytics-stats-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .analytics-stat-card { padding: 10px; gap: 8px; }
+    .analytics-stat-val { font-size: 16px; }
+    .analytics-charts-grid { grid-template-columns: 1fr; }
+
+    /* ── Settings tab ──────────────────────── */
+    .settings-layout { grid-template-columns: 1fr; gap: 12px; }
+    .settings-group { padding: 16px; }
+    .settings-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 0;
+    }
+    .settings-color-swatches { flex-wrap: wrap; }
+    .settings-bg-options { gap: 6px; }
+    .bg-opt { padding: 5px; }
+    .bg-opt-preview { width: 38px; height: 26px; }
+    .settings-slider-wrap { width: 100%; }
+    .settings-font-options { gap: 5px; }
+    .font-opt { font-size: 11px; padding: 5px 10px; }
+
+    /* ── Modals ────────────────────────────── */
+    .mod-modal { margin: 0 12px; max-width: calc(100vw - 24px); }
+    .discord-profile-popup {
+        width: calc(100vw - 24px);
+        left: 12px !important;
+        bottom: 72px !important;
+    }
+
+    /* ── Misc ─────────────────────────────── */
+    @media (max-width: 380px) {
+        #connectionStatus { display: none; }
+        .top-bar h1 { font-size: 15px; }
+        .mod-stats-row .mod-stat-card:nth-child(n+3) { display: none; }
+    }
+}
+
+/* ── Touch: larger tap targets ─────────────── */
+@media (hover: none) {
+    .btn-icon { min-width: 40px; min-height: 40px; }
+    .queue-item { padding: 10px; }
+    .search-item { padding: 12px 15px; }
+    .guild-dropdown-item { padding: 12px 15px; }
+    .fix-option-btn { padding: 16px; }
+    .pl-card-main { padding: 12px; }
+    .mob-music-tab { min-height: 40px; }
+    .mobile-tab { min-height: 44px; }
+}
