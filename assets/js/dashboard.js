@@ -303,18 +303,15 @@ async function fetchGuilds(token) {
 
             closeGuildDropdown();
             updateMusicState();
+
+            // Only check voice for the selected guild, not all guilds
+            if (userProfile && API_BASE) checkUserVoiceInGuild(g.id, g.name);
         });
 
         menu.appendChild(item);
     });
 
     renderServerGrid(adminGuilds);
-
-    // After loading guilds, check if the user is already in a VC somewhere
-    // and show the smart auto-select prompt
-    if (userProfile && API_BASE) {
-        checkUserVoiceAcrossGuilds(adminGuilds);
-    }
 }
 
 function toggleGuildDropdown() {
@@ -338,33 +335,24 @@ function closeGuildDropdown() {
 let _autoVcGuildId = null;
 let _autoVcChannelName = null;
 
-async function checkUserVoiceAcrossGuilds(guilds) {
+async function checkUserVoiceInGuild(guildId, guildName) {
     if (!userProfile || !API_BASE) return;
-    // Check each guild until we find one where the user is in voice
-    for (const g of guilds) {
-        try {
-            const res = await fetch(`${API_BASE}/user/voice/${g.id}/${userProfile.id}`, {
-                headers: { 'ngrok-skip-browser-warning': 'true' }
-            });
-            const data = await res.json();
-            if (data.in_voice) {
-                _autoVcGuildId = g.id;
-                _autoVcChannelName = data.channel_name;
-                const members = data.member_count;
-
-                // Find the guild icon
-                const item = document.querySelector(`.guild-dropdown-item[data-id="${g.id}"]`);
-                const iconUrl = item?.dataset.icon || null;
-
-                document.getElementById('vcAutoPromptMsg').textContent =
-                    `You're in #${data.channel_name} on ${g.name}${members > 1 ? ` (${members} members)` : ''}`;
-                document.getElementById('vcAutoPromptSub').textContent =
-                    'Want Rift to use your current channel?';
-                document.getElementById('vcAutoPrompt').classList.remove('hidden');
-                break;
-            }
-        } catch (_) {}
-    }
+    try {
+        const res = await fetch(`${API_BASE}/user/voice/${guildId}/${userProfile.id}`, {
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        const data = await res.json();
+        if (data.in_voice) {
+            _autoVcGuildId = guildId;
+            _autoVcChannelName = data.channel_name;
+            const members = data.member_count;
+            document.getElementById('vcAutoPromptMsg').textContent =
+                `You're in #${data.channel_name} on ${guildName}${members > 1 ? ` (${members} members)` : ''}`;
+            document.getElementById('vcAutoPromptSub').textContent =
+                'Want Rift to use your current channel?';
+            document.getElementById('vcAutoPrompt').classList.remove('hidden');
+        }
+    } catch (_) {}
 }
 
 window.acceptAutoVc = function() {
@@ -804,7 +792,7 @@ setInterval(() => {
     if (document.getElementById('music').classList.contains('active')) {
         updateMusicState();
     }
-}, 2500);
+}, 5000);
 /* ================= PANEL RESIZER ================= */
 (function initPanelResizers() {
     function makeResizer(resizerId, leftPanelId, rightPanelId) {
