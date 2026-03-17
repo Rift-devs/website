@@ -390,28 +390,75 @@ body {
     color: var(--text-muted);
 }
 
+/* Coming Soon Nav Items */
+.nav-coming-soon {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: not-allowed;
+    color: rgba(160, 160, 168, 0.35);
+    position: relative;
+    user-select: none;
+}
+
+.nav-coming-soon i {
+    font-size: 18px;
+}
+
+.coming-soon-badge {
+    margin-left: auto;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: rgba(114, 137, 218, 0.5);
+    background: rgba(114, 137, 218, 0.08);
+    border: 1px solid rgba(114, 137, 218, 0.2);
+    border-radius: 6px;
+    padding: 2px 6px;
+    white-space: nowrap;
+}
+
+/* Range input with fill color */
 input[type="range"] {
     flex-grow: 1;
     height: 6px;
     border-radius: 3px;
     background: rgba(255,255,255,0.1);
     appearance: none;
+    -webkit-appearance: none;
     cursor: pointer;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
     appearance: none;
+    -webkit-appearance: none;
     width: 16px;
     height: 16px;
     border-radius: 50%;
     background: var(--text-main);
     box-shadow: 0 0 10px rgba(255,255,255,0.5);
     transition: 0.2s;
+    margin-top: -5px;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.2);
     box-shadow: 0 0 15px var(--primary);
+}
+
+/* Loop active state */
+.btn-icon.active {
+    color: var(--primary);
+    text-shadow: 0 0 10px var(--primary-glow);
 }
 
 .control-buttons {

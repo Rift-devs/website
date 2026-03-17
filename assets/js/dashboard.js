@@ -58,18 +58,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const seekBar = document.getElementById('seekBar');
-    seekBar.addEventListener('input', () => isSeeking = true);
+    seekBar.addEventListener('input', () => { isSeeking = true; updateRangeFill(seekBar); });
     seekBar.addEventListener('change', (e) => {
         isSeeking = false;
         const newPos = (e.target.value / 100) * currentTrackDuration;
-        musicControl('seek', newPos); // Requires backend support if seeking implemented via /control
+        musicControl('seek', newPos);
         localTimeMs = newPos;
         lastSyncTimestamp = Date.now();
+        updateRangeFill(seekBar);
     });
 
-    document.getElementById('volumeSlider').addEventListener('change', (e) => {
+    const volumeSlider = document.getElementById('volumeSlider');
+    volumeSlider.addEventListener('input', () => updateRangeFill(volumeSlider));
+    volumeSlider.addEventListener('change', (e) => {
         musicControl('volume', e.target.value);
+        updateRangeFill(volumeSlider);
     });
+    updateRangeFill(volumeSlider);
 
     // Search Box Listener
     let searchTimeout;
@@ -143,18 +148,20 @@ function initFallingStars() {
 
 /* ================= NAVIGATION ================= */
 function initTabs() {
-    const links = document.querySelectorAll('.nav-links li');
+    const links = document.querySelectorAll('.nav-links li:not(.nav-coming-soon)');
     links.forEach(link => {
         link.addEventListener('click', () => {
             const target = link.dataset.tab;
-            
+            if (!target) return;
+
             links.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
-            
+
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             document.getElementById(target).classList.add('active');
-            
-            document.getElementById('activeTabTitle').textContent = target.charAt(0).toUpperCase() + target.slice(1);
+
+            document.getElementById('activeTabTitle').textContent =
+                target.charAt(0).toUpperCase() + target.slice(1);
         });
     });
 }
@@ -320,6 +327,14 @@ function formatTime(ms) {
     return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function updateRangeFill(input) {
+    const min = parseFloat(input.min) || 0;
+    const max = parseFloat(input.max) || 100;
+    const val = parseFloat(input.value) || 0;
+    const pct = ((val - min) / (max - min)) * 100;
+    input.style.background = `linear-gradient(to right, var(--primary) ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
+}
+
 /* ================= SEARCH ENGINE ================= */
 async function searchMusic(query) {
     if (!API_BASE) { console.warn('[Search] API_BASE not set — open the bot startup URL first'); return; }
@@ -400,6 +415,18 @@ async function updateMusicState() {
             document.getElementById('albumArt').style.backgroundImage = `url(${data.current.artwork || ''})`;
             document.getElementById('albumArt').innerHTML = data.current.artwork ? '' : '<i class="fa-solid fa-compact-disc fa-spin-slow"></i>';
             document.getElementById('playPauseBtn').innerHTML = data.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+            document.getElementById('timeTotal').textContent = formatTime(data.current.duration);
+
+            // Reflect loop mode on button
+            const loopBtn = document.getElementById('loopBtn');
+            if (loopBtn) {
+                const loopMode = data.modes?.loop ?? 0;
+                loopBtn.classList.toggle('active', loopMode !== 0);
+                loopBtn.title = loopMode === 0 ? 'Loop Off' : loopMode === 1 ? 'Loop One' : 'Loop All';
+                loopBtn.querySelector('i').className = loopMode === 1
+                    ? 'fa-solid fa-repeat-1'
+                    : 'fa-solid fa-repeat';
+            }
             
             currentTrackDuration = data.current.duration;
             
@@ -593,7 +620,9 @@ function animationLoop() {
         // Update Progress Bar if user isn't holding it
         if (!isSeeking) {
             const percent = (localTimeMs / currentTrackDuration) * 100;
-            document.getElementById('seekBar').value = percent || 0;
+            const seekBar = document.getElementById('seekBar');
+            seekBar.value = percent || 0;
+            updateRangeFill(seekBar);
             document.getElementById('timeCurrent').textContent = formatTime(localTimeMs);
         }
 

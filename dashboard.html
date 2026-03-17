@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rift Dashboard</title>
-    <link rel="icon" type="image/png" href="https://media.discordapp.net/attachments/1469631519327912012/1482880775467831358/cropped_circle_image.png?ex=69b88fd7&is=69b73e57&hm=6aaf7aa96eb90a0b3cec2ce4e4d759afb4a1ae4552c565a2b2c600478742033d&=&format=webp&quality=lossless">
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/qR4jqJdK/cropped_circle_image.png">
     <link rel="stylesheet" href="assets/css/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -22,21 +22,19 @@
             </div>
             
             <ul class="nav-links">
-                <li class="active" data-tab="overview">
-                    <i class="fa-solid fa-house"></i>
-                    <span>Overview</span>
-                </li>
-                <li data-tab="music">
+                <li class="active" data-tab="music">
                     <i class="fa-solid fa-music"></i>
                     <span>Music Player</span>
                 </li>
-                <li data-tab="servers">
-                    <i class="fa-solid fa-server"></i>
-                    <span>Servers</span>
+                <li class="nav-coming-soon" data-tab="">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analytics</span>
+                    <span class="coming-soon-badge">COMING SOON</span>
                 </li>
-                <li data-tab="settings">
-                    <i class="fa-solid fa-gears"></i>
+                <li class="nav-coming-soon" data-tab="">
+                    <i class="fa-solid fa-sliders"></i>
                     <span>Settings</span>
+                    <span class="coming-soon-badge">COMING SOON</span>
                 </li>
             </ul>
 
@@ -51,7 +49,7 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <h1 id="activeTabTitle">Overview</h1>
+                <h1 id="activeTabTitle">Music Player</h1>
                 <div class="system-status">
                     <span class="status-indicator online"></span>
                     <span id="connectionStatus">Connected</span>
@@ -59,49 +57,7 @@
             </header>
 
             <div class="content-scroll-area">
-                <section id="overview" class="tab-pane active">
-                    <div class="stats-grid">
-                        <div class="stat-card glass">
-                            <i class="fa-solid fa-server"></i>
-                            <div class="stat-val" id="stat-servers">0</div>
-                            <div class="stat-label">Servers</div>
-                        </div>
-                        <div class="stat-card glass">
-                            <i class="fa-solid fa-users"></i>
-                            <div class="stat-val" id="stat-users">0</div>
-                            <div class="stat-label">Users</div>
-                        </div>
-                        <div class="stat-card glass">
-                            <i class="fa-solid fa-signal"></i>
-                            <div class="stat-val" id="stat-ping">0ms</div>
-                            <div class="stat-label">Latency</div>
-                        </div>
-                        <div class="stat-card glass">
-                            <i class="fa-solid fa-clock"></i>
-                            <div class="stat-val" id="stat-uptime">0h 0m</div>
-                            <div class="stat-label">Uptime</div>
-                        </div>
-                    </div>
-
-                    <div class="resources-grid">
-                        <div class="resource-card glass">
-                            <h3>CPU Usage</h3>
-                            <div class="progress-container">
-                                <div class="progress-bar" id="cpu-progress" style="width: 0%"></div>
-                            </div>
-                            <span id="stat-cpu">0%</span>
-                        </div>
-                        <div class="resource-card glass">
-                            <h3>RAM Usage</h3>
-                            <div class="progress-container">
-                                <div class="progress-bar" id="ram-progress" style="width: 0%"></div>
-                            </div>
-                            <span id="stat-ram">0%</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="music" class="tab-pane">
+                <section id="music" class="tab-pane active">
                     <div class="music-layout">
                         
                         <div class="player-main glass">
@@ -144,11 +100,11 @@
                                     <span id="timeTotal">0:00</span>
                                 </div>
                                 <div class="control-buttons">
-                                    <button class="btn-icon" onclick="musicControl('shuffle')"><i class="fa-solid fa-shuffle"></i></button>
-                                    <button class="btn-icon" onclick="musicControl('prev')"><i class="fa-solid fa-backward-step"></i></button>
+                                    <button class="btn-icon btn-sm" onclick="musicControl('shuffle')" title="Shuffle"><i class="fa-solid fa-shuffle"></i></button>
+                                    <button class="btn-icon btn-sm" onclick="musicControl('prev')" title="Previous"><i class="fa-solid fa-backward-step"></i></button>
                                     <button class="btn-main" onclick="musicControl('toggle')" id="playPauseBtn"><i class="fa-solid fa-play"></i></button>
-                                    <button class="btn-icon" onclick="musicControl('next')"><i class="fa-solid fa-forward-step"></i></button>
-                                    <button class="btn-icon" onclick="musicControl('loop')"><i class="fa-solid fa-repeat"></i></button>
+                                    <button class="btn-icon btn-sm" onclick="musicControl('skip')" title="Skip"><i class="fa-solid fa-forward-step"></i></button>
+                                    <button class="btn-icon btn-sm" onclick="musicControl('loop')" id="loopBtn" title="Loop Off"><i class="fa-solid fa-repeat"></i></button>
                                 </div>
                                 <div class="volume-control">
                                     <i class="fa-solid fa-volume-high"></i>
@@ -178,25 +134,6 @@
                     </div>
                 </section>
 
-                <section id="servers" class="tab-pane">
-                    <div id="serverList" class="server-grid">
-                        <div class="loading-state">Login to manage your servers</div>
-                    </div>
-                </section>
-
-                <section id="settings" class="tab-pane">
-                    <div class="settings-container glass">
-                        <h3>Global Settings</h3>
-                        <div class="setting-item">
-                            <div class="setting-info">
-                                <h4>Bot Prefix</h4>
-                                <p>Custom command prefix for your servers</p>
-                            </div>
-                            <input type="text" id="globalPrefix" placeholder="!">
-                        </div>
-                        <button class="save-btn">Save Changes</button>
-                    </div>
-                </section>
             </div>
         </main>
     </div>
