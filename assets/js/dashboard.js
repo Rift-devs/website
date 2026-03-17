@@ -949,8 +949,9 @@ async function fetchLyrics(title, author) {
 
     try {
         // Clean strings for better LRCLIB matching
-        const cleanTitle = title.replace(/\s*[\(\[].*?[\)\]]/g, '').trim();
-        const url = `https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(author)}`;
+        const cleanTitle  = title.replace(/\s*[\(\[].*?[\)\]]/g, '').trim();
+        const cleanAuthor = author.replace(/\s*-\s*(topic|official|music|vevo|records|tv).*$/i, '').trim();
+        const url = `https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanAuthor)}`;
         
         const res = await fetch(url);
         const data = await res.json();
