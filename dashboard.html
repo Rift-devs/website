@@ -30,10 +30,13 @@
                     <i class="fa-solid fa-music"></i>
                     <span>Music Player</span>
                 </li>
-                <li class="nav-coming-soon" data-tab="">
+                <li data-tab="stocks">
                     <i class="fa-solid fa-chart-line"></i>
-                    <span>Analytics</span>
-                    <span class="coming-soon-badge">COMING SOON</span>
+                    <span>Stock Market</span>
+                </li>
+                <li data-tab="lastfm">
+                    <i class="fa-solid fa-headphones"></i>
+                    <span>Last.fm</span>
                 </li>
                 <li class="nav-coming-soon" data-tab="">
                     <i class="fa-solid fa-sliders"></i>
@@ -222,11 +225,224 @@
                     </div>
                 </section>
 
+                <!-- ══════════════════════════════════════ -->
+                <!--  STOCKS TAB                            -->
+                <!-- ══════════════════════════════════════ -->
+                <section id="stocks" class="tab-pane">
+                    <div class="stocks-layout">
+
+                        <!-- Left: market overview + chart -->
+                        <div class="stocks-main">
+                            <!-- Header row -->
+                            <div class="stocks-header glass">
+                                <div class="stocks-header-left">
+                                    <h2><i class="fa-solid fa-chart-line"></i> Stock Market</h2>
+                                    <span class="market-news-ticker" id="marketNewsTicker">Loading market news...</span>
+                                </div>
+                                <div class="stocks-header-right">
+                                    <div class="market-event-badge hidden" id="marketEventBadge">
+                                        <i class="fa-solid fa-bolt"></i> <span id="marketEventName"></span>
+                                    </div>
+                                    <span class="market-last-update" id="marketLastUpdate">—</span>
+                                </div>
+                            </div>
+
+                            <!-- Stock chart -->
+                            <div class="stock-chart-card glass">
+                                <div class="stock-chart-header">
+                                    <div class="stock-chart-info">
+                                        <span class="stock-chart-symbol" id="chartSymbol">MEL</span>
+                                        <span class="stock-chart-name" id="chartName">Select a stock</span>
+                                        <span class="stock-chart-price" id="chartPrice">$—</span>
+                                        <span class="stock-chart-change" id="chartChange">—</span>
+                                    </div>
+                                    <div class="stock-chart-meta">
+                                        <span id="chartSector" class="stock-sector-badge"></span>
+                                        <span id="chartSentiment" class="stock-sentiment"></span>
+                                    </div>
+                                </div>
+                                <canvas id="stockChart" height="180"></canvas>
+                            </div>
+
+                            <!-- Market table -->
+                            <div class="market-table-card glass">
+                                <div class="market-table-header">
+                                    <span>Symbol</span><span>Name</span><span>Price</span>
+                                    <span>Change</span><span>Sector</span><span>Trend</span>
+                                </div>
+                                <div id="marketTableBody" class="market-table-body">
+                                    <div class="loading-shimmer"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: portfolio + trade + leaderboard -->
+                        <div class="stocks-sidebar">
+                            <!-- Portfolio -->
+                            <div class="glass stocks-portfolio-card">
+                                <div class="stocks-section-header">
+                                    <h3><i class="fa-solid fa-briefcase"></i> My Portfolio</h3>
+                                    <button class="btn-icon btn-sm" onclick="refreshPortfolio()" title="Refresh">
+                                        <i class="fa-solid fa-rotate-right"></i>
+                                    </button>
+                                </div>
+                                <div id="portfolioStats" class="portfolio-stats">
+                                    <div class="portfolio-stat">
+                                        <span class="portfolio-stat-label">Cash</span>
+                                        <span class="portfolio-stat-val" id="portfolioCash">$—</span>
+                                    </div>
+                                    <div class="portfolio-stat">
+                                        <span class="portfolio-stat-label">Stocks</span>
+                                        <span class="portfolio-stat-val" id="portfolioStocks">$—</span>
+                                    </div>
+                                    <div class="portfolio-stat highlight">
+                                        <span class="portfolio-stat-label">Net Worth</span>
+                                        <span class="portfolio-stat-val" id="portfolioNet">$—</span>
+                                    </div>
+                                </div>
+                                <div id="portfolioHoldings" class="portfolio-holdings">
+                                    <div class="portfolio-empty">Login to view portfolio</div>
+                                </div>
+                            </div>
+
+                            <!-- Trade panel -->
+                            <div class="glass stocks-trade-card">
+                                <h3><i class="fa-solid fa-arrow-right-arrow-left"></i> Trade</h3>
+                                <div class="trade-form">
+                                    <div class="trade-stock-select" id="tradeStockSelected" onclick="toggleTradeDropdown()">
+                                        <span id="tradeStockLabel">Select a stock...</span>
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </div>
+                                    <div class="trade-dropdown hidden" id="tradeDropdown"></div>
+                                    <div class="trade-price-row">
+                                        <span class="trade-current-price" id="tradePriceDisplay">Price: $—</span>
+                                        <span class="trade-owned" id="tradeOwnedDisplay">Owned: —</span>
+                                    </div>
+                                    <div class="trade-qty-row">
+                                        <button class="trade-qty-btn" onclick="adjustQty(-10)">-10</button>
+                                        <button class="trade-qty-btn" onclick="adjustQty(-1)">-1</button>
+                                        <input type="number" id="tradeQty" value="1" min="1" class="trade-qty-input">
+                                        <button class="trade-qty-btn" onclick="adjustQty(1)">+1</button>
+                                        <button class="trade-qty-btn" onclick="adjustQty(10)">+10</button>
+                                    </div>
+                                    <div class="trade-total-row">
+                                        <span>Total</span>
+                                        <span id="tradeTotalCost" class="trade-total-val">$—</span>
+                                    </div>
+                                    <div class="trade-buttons">
+                                        <button class="trade-btn buy" onclick="executeTrade('buy')">
+                                            <i class="fa-solid fa-arrow-trend-up"></i> BUY
+                                        </button>
+                                        <button class="trade-btn sell" onclick="executeTrade('sell')">
+                                            <i class="fa-solid fa-arrow-trend-down"></i> SELL
+                                        </button>
+                                    </div>
+                                    <div id="tradeResult" class="trade-result hidden"></div>
+                                </div>
+                            </div>
+
+                            <!-- Leaderboard -->
+                            <div class="glass stocks-leaderboard-card">
+                                <h3><i class="fa-solid fa-trophy"></i> Richest Users</h3>
+                                <div id="stocksLeaderboard" class="stocks-leaderboard">
+                                    <div class="loading-shimmer"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══════════════════════════════════════ -->
+                <!--  LAST.FM TAB                           -->
+                <!-- ══════════════════════════════════════ -->
+                <section id="lastfm" class="tab-pane">
+                    <div class="lastfm-layout">
+
+                        <!-- Left: profile + now playing + recent -->
+                        <div class="lastfm-main">
+                            <!-- Profile card -->
+                            <div class="glass lastfm-profile-card" id="lastfmProfileCard">
+                                <div class="lastfm-not-linked" id="lastfmNotLinked">
+                                    <i class="fa-solid fa-link-slash"></i>
+                                    <p>No Last.fm account linked.<br>Use <code>/fm login</code> in Discord.</p>
+                                </div>
+                                <div class="lastfm-profile-inner hidden" id="lastfmProfileInner">
+                                    <div class="lastfm-avatar-wrap">
+                                        <img id="lastfmAvatar" src="" alt="">
+                                        <div class="lastfm-scrobble-badge" id="lastfmScrobbleBadge"></div>
+                                    </div>
+                                    <div class="lastfm-profile-info">
+                                        <div class="lastfm-username-row">
+                                            <a id="lastfmUsernameLink" href="#" target="_blank" class="lastfm-username"></a>
+                                            <span class="lastfm-country" id="lastfmCountry"></span>
+                                        </div>
+                                        <div class="lastfm-profile-stats">
+                                            <div class="lastfm-stat"><span class="lastfm-stat-val" id="lastfmPlaycount">—</span><span class="lastfm-stat-label">Scrobbles</span></div>
+                                            <div class="lastfm-stat"><span class="lastfm-stat-val" id="lastfmArtists">—</span><span class="lastfm-stat-label">Artists</span></div>
+                                            <div class="lastfm-stat"><span class="lastfm-stat-val" id="lastfmTracks">—</span><span class="lastfm-stat-label">Tracks</span></div>
+                                            <div class="lastfm-stat"><span class="lastfm-stat-val" id="lastfmAlbums">—</span><span class="lastfm-stat-label">Albums</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Now playing -->
+                            <div class="glass lastfm-now-card" id="lastfmNowCard">
+                                <div class="lastfm-section-label"><i class="fa-solid fa-wave-square"></i> Now Playing</div>
+                                <div class="lastfm-now-inner" id="lastfmNowInner">
+                                    <div class="lastfm-nothing">Nothing playing right now</div>
+                                </div>
+                            </div>
+
+                            <!-- Recent tracks -->
+                            <div class="glass lastfm-recent-card">
+                                <div class="lastfm-section-label"><i class="fa-solid fa-clock-rotate-left"></i> Recent Tracks</div>
+                                <div id="lastfmRecentList" class="lastfm-recent-list">
+                                    <div class="loading-shimmer"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: charts + analytics -->
+                        <div class="lastfm-sidebar">
+                            <!-- Period selector -->
+                            <div class="lastfm-period-bar glass">
+                                <span class="lastfm-period-label">Period:</span>
+                                <div class="lastfm-period-btns">
+                                    <button class="period-btn active" data-period="7day" onclick="setFmPeriod('7day',this)">7D</button>
+                                    <button class="period-btn" data-period="1month" onclick="setFmPeriod('1month',this)">1M</button>
+                                    <button class="period-btn" data-period="3month" onclick="setFmPeriod('3month',this)">3M</button>
+                                    <button class="period-btn" data-period="6month" onclick="setFmPeriod('6month',this)">6M</button>
+                                    <button class="period-btn" data-period="12month" onclick="setFmPeriod('12month',this)">1Y</button>
+                                    <button class="period-btn" data-period="overall" onclick="setFmPeriod('overall',this)">All</button>
+                                </div>
+                            </div>
+
+                            <!-- Top artists chart -->
+                            <div class="glass lastfm-chart-card">
+                                <div class="lastfm-section-label"><i class="fa-solid fa-user-music"></i> Top Artists</div>
+                                <canvas id="fmArtistsChart" height="200"></canvas>
+                                <div id="fmArtistsList" class="lastfm-top-list"></div>
+                            </div>
+
+                            <!-- Top tracks chart -->
+                            <div class="glass lastfm-chart-card">
+                                <div class="lastfm-section-label"><i class="fa-solid fa-music"></i> Top Tracks</div>
+                                <canvas id="fmTracksChart" height="160"></canvas>
+                                <div id="fmTracksList" class="lastfm-top-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </div>
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/stocks.js"></script>
+    <script src="assets/js/lastfm.js"></script>
     <script>
         function openSidebar() {
             document.getElementById('sidebar').classList.add('open');

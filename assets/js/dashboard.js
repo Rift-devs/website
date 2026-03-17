@@ -164,8 +164,13 @@ function initTabs() {
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             document.getElementById(target).classList.add('active');
 
-            document.getElementById('activeTabTitle').textContent =
-                target.charAt(0).toUpperCase() + target.slice(1);
+            const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm' };
+            document.getElementById('activeTabTitle').textContent = titles[target] || target;
+
+            if (target === 'stocks' && typeof window.initStocks === 'function') window.initStocks();
+            if (target === 'lastfm' && typeof window.initLastfm === 'function') window.initLastfm();
+
+            if (window.innerWidth <= 768) closeSidebar();
         });
     });
 }
