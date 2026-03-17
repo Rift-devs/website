@@ -16,6 +16,23 @@ window.initLastfm = async function() {
     }
     fmUserId = userProfile.id;
 
+    // Show loading state instead of "not linked" while waiting for API
+    document.getElementById('lastfmNotLinked').classList.add('hidden');
+    document.getElementById('lastfmProfileInner').classList.add('hidden');
+
+    // Wait up to 3s for API_BASE to be ready (Gist fetch may still be in progress)
+    if (!API_BASE) {
+        for (let i = 0; i < 6; i++) {
+            await new Promise(r => setTimeout(r, 500));
+            if (API_BASE) break;
+        }
+    }
+
+    if (!API_BASE) {
+        showFmNotLinked();
+        return;
+    }
+
     await loadFmProfile();
     await loadFmNowPlaying();
     await loadFmTopArtists();

@@ -239,8 +239,35 @@ async function checkAuth() {
     if (token) {
         localStorage.setItem('d_token', token);
         window.history.replaceState({}, document.title, window.location.pathname);
-        fetchProfile(token);
+        await fetchProfile(token);
+    } else {
+        showLoginWall();
     }
+}
+
+function showLoginWall() {
+    // Blur everything and force login
+    let wall = document.getElementById('loginWall');
+    if (!wall) {
+        wall = document.createElement('div');
+        wall.id = 'loginWall';
+        wall.innerHTML = `
+            <div class="login-wall-inner">
+                <img src="https://i.postimg.cc/D0DrrFt3/110c46fc7f5cf0c4e29f872107d7bf97.png" class="login-wall-logo">
+                <h1 class="login-wall-title">RIFT</h1>
+                <p class="login-wall-sub">Sign in with Discord to access the dashboard</p>
+                <button class="login-wall-btn" onclick="login()">
+                    <i class="fa-brands fa-discord"></i> Login with Discord
+                </button>
+            </div>`;
+        document.body.appendChild(wall);
+    }
+    wall.classList.add('active');
+}
+
+function hideLoginWall() {
+    const wall = document.getElementById('loginWall');
+    if (wall) wall.classList.remove('active');
 }
 
 async function fetchProfile(token) {
@@ -249,6 +276,14 @@ async function fetchProfile(token) {
             headers: { Authorization: `Bearer ${token}` }
         });
         userProfile = await res.json();
+
+        if (userProfile.id) {
+            hideLoginWall();
+        } else {
+            localStorage.removeItem('d_token');
+            showLoginWall();
+            return;
+        }
         
         document.getElementById('userCard').innerHTML = `
             <div class="user-info" style="display:flex; align-items:center; gap:12px;">
@@ -259,6 +294,7 @@ async function fetchProfile(token) {
         fetchGuilds(token);
     } catch (e) {
         localStorage.removeItem('d_token');
+        showLoginWall();
     }
 }
 
