@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rift Dashboard</title>
-    <link rel="icon" type="image/png" href="https://i.postimg.cc/qR4jqJdK/cropped_circle_image.png">
+    <link rel="icon" type="image/png" href="<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rift Dashboard</title>
+    <link rel="icon" type="image/png" href="https://media.discordapp.net/attachments/1469631519327912012/1482880775467831358/cropped_circle_image.png?ex=69b88fd7&is=69b73e57&hm=6aaf7aa96eb90a0b3cec2ce4e4d759afb4a1ae4552c565a2b2c600478742033d&=&format=webp&quality=lossless">
     <link rel="stylesheet" href="assets/css/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -74,6 +80,37 @@
                                 </div>
                             </div>
 
+                            <!-- Smart VC auto-select prompt (shown before server is selected) -->
+                            <div id="vcAutoPrompt" class="vc-auto-prompt hidden">
+                                <div class="vc-auto-prompt-inner">
+                                    <i class="fa-solid fa-headphones-simple"></i>
+                                    <div class="vc-auto-prompt-text">
+                                        <span id="vcAutoPromptMsg">You're in a voice channel!</span>
+                                        <span id="vcAutoPromptSub">Want Rift to use it?</span>
+                                    </div>
+                                    <button class="vc-auto-btn" id="vcAutoYes" onclick="acceptAutoVc()">
+                                        <i class="fa-solid fa-check"></i> Use it
+                                    </button>
+                                    <button class="vc-auto-dismiss" onclick="dismissAutoVc()">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- VC status bar (shown after server selected) -->
+                            <div id="vcStatusBar" class="vc-status-bar hidden">
+                                <div id="vcConnected" class="vc-connected hidden">
+                                    <span class="vc-dot"></span>
+                                    <i class="fa-solid fa-volume-high"></i>
+                                    <a id="vcChannelLink" href="#" target="_blank" class="vc-channel-name">—</a>
+                                    <span id="vcMemberCount" class="vc-members"></span>
+                                </div>
+                                <div id="vcDisconnected" class="vc-disconnected hidden">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <span>Bot is not in a voice channel — join one to play music</span>
+                                </div>
+                            </div>
+
                             <div class="music-search-container">
                                 <div class="search-box">
                                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -100,21 +137,246 @@
                                     <span id="timeTotal">0:00</span>
                                 </div>
                                 <div class="control-buttons">
-                                    <button class="btn-icon btn-sm" onclick="musicControl('shuffle')" title="Shuffle"><i class="fa-solid fa-shuffle"></i></button>
-                                    <button class="btn-icon btn-sm" onclick="musicControl('prev')" title="Previous"><i class="fa-solid fa-backward-step"></i></button>
-                                    <button class="btn-main" onclick="musicControl('toggle')" id="playPauseBtn"><i class="fa-solid fa-play"></i></button>
-                                    <button class="btn-icon btn-sm" onclick="musicControl('skip')" title="Skip"><i class="fa-solid fa-forward-step"></i></button>
-                                    <button class="btn-icon btn-sm" onclick="musicControl('loop')" id="loopBtn" title="Loop Off"><i class="fa-solid fa-repeat"></i></button>
+                                    <button class="btn-icon btn-sm ctrl-btn" id="shuffleBtn" onclick="musicControl('shuffle')" title="Shuffle">
+                                        <i class="fa-solid fa-shuffle"></i>
+                                        <span class="ctrl-tooltip">Shuffle</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn" onclick="musicControl('prev')" title="Previous">
+                                        <i class="fa-solid fa-backward-step"></i>
+                                        <span class="ctrl-tooltip">Previous</span>
+                                    </button>
+                                    <button class="btn-main ctrl-btn" onclick="musicControl('toggle')" id="playPauseBtn">
+                                        <i class="fa-solid fa-play"></i>
+                                        <span class="ctrl-tooltip" id="playPauseTooltip">Play</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn" onclick="musicControl('skip')" title="Skip">
+                                        <i class="fa-solid fa-forward-step"></i>
+                                        <span class="ctrl-tooltip">Skip</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn" id="loopBtn" onclick="handleLoopClick()" title="Loop: Off">
+                                        <i class="fa-solid fa-repeat"></i>
+                                        <span class="ctrl-tooltip" id="loopTooltip">Loop: Off</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn btn-stop" onclick="musicControl('stop')" title="Stop & Disconnect">
+                                        <i class="fa-solid fa-stop"></i>
+                                        <span class="ctrl-tooltip">Stop</span>
+                                    </button>
                                 </div>
                                 <div class="volume-control">
                                     <i class="fa-solid fa-volume-high"></i>
                                     <input type="range" id="volumeSlider" min="0" max="100" value="100">
+                                    <span id="volumeVal" style="font-size:12px;color:var(--text-muted);min-width:30px">100%</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="lyrics-panel glass">
-                            <h3><i class="fa-solid fa-microphone-lines"></i> Live Lyrics</h3>
+                            <div class="lyrics-header">
+                                <h3><i class="fa-solid fa-microphone-lines"></i> Live Lyrics</h3>
+                                <button class="btn-icon btn-sm" id="lyricsSearchToggle" onclick="toggleLyricsSearch()" title="Search Lyrics Manually">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                            <div id="lyricsSearchBox" class="lyrics-search-box hidden">
+                                <input type="text" id="lyricsManualInput" placeholder="Artist - Song title..." autocomplete="off">
+                                <button onclick="manualLyricsSearch()"><i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                            <div class="lyrics-container" id="lyricsContainer">
+                                <div class="lyric-placeholder">Lyrics will appear here when a song plays...</div>
+                            </div>
+                        </div>
+
+                        <div class="music-sidebar glass">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h3>Queue</h3>
+                                <button class="btn-icon btn-sm" onclick="musicControl('clear_queue')" title="Clear Queue">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                            <ul id="queueList" class="queue-list">
+                                <li class="empty-msg">Queue is empty</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <canvas id="dashboard-stars-canvas"></canvas>
+
+    <div class="glass-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <img src="https://i.postimg.cc/D0DrrFt3/110c46fc7f5cf0c4e29f872107d7bf97.png" alt="Rift Logo" class="sidebar-logo-img">
+                    <span>RIFT</span>
+                </div>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active" data-tab="music">
+                    <i class="fa-solid fa-music"></i>
+                    <span>Music Player</span>
+                </li>
+                <li class="nav-coming-soon" data-tab="">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analytics</span>
+                    <span class="coming-soon-badge">COMING SOON</span>
+                </li>
+                <li class="nav-coming-soon" data-tab="">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Settings</span>
+                    <span class="coming-soon-badge">COMING SOON</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-card" id="userCard">
+                    <button class="login-btn" onclick="login()">
+                        <i class="fa-brands fa-discord"></i> Login
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="activeTabTitle">Music Player</h1>
+                <div class="system-status">
+                    <span class="status-indicator online"></span>
+                    <span id="connectionStatus">Connected</span>
+                </div>
+            </header>
+
+            <div class="content-scroll-area">
+                <section id="music" class="tab-pane active">
+                    <div class="music-layout">
+                        
+                        <div class="player-main glass">
+                            <div class="guild-selector">
+                                <div class="guild-dropdown" id="guildDropdown">
+                                    <div class="guild-dropdown-selected" id="guildDropdownSelected" onclick="toggleGuildDropdown()">
+                                        <div class="guild-dropdown-placeholder">
+                                            <i class="fa-solid fa-server"></i>
+                                            <span>Select a Server</span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-down guild-dropdown-arrow"></i>
+                                    </div>
+                                    <div class="guild-dropdown-menu hidden" id="guildDropdownMenu"></div>
+                                </div>
+                            </div>
+
+                            <!-- Smart VC auto-select prompt (shown before server is selected) -->
+                            <div id="vcAutoPrompt" class="vc-auto-prompt hidden">
+                                <div class="vc-auto-prompt-inner">
+                                    <i class="fa-solid fa-headphones-simple"></i>
+                                    <div class="vc-auto-prompt-text">
+                                        <span id="vcAutoPromptMsg">You're in a voice channel!</span>
+                                        <span id="vcAutoPromptSub">Want Rift to use it?</span>
+                                    </div>
+                                    <button class="vc-auto-btn" id="vcAutoYes" onclick="acceptAutoVc()">
+                                        <i class="fa-solid fa-check"></i> Use it
+                                    </button>
+                                    <button class="vc-auto-dismiss" onclick="dismissAutoVc()">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- VC status bar (shown after server selected) -->
+                            <div id="vcStatusBar" class="vc-status-bar hidden">
+                                <div id="vcConnected" class="vc-connected hidden">
+                                    <span class="vc-dot"></span>
+                                    <i class="fa-solid fa-volume-high"></i>
+                                    <a id="vcChannelLink" href="#" target="_blank" class="vc-channel-name">—</a>
+                                    <span id="vcMemberCount" class="vc-members"></span>
+                                </div>
+                                <div id="vcDisconnected" class="vc-disconnected hidden">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <span>Bot is not in a voice channel — join one to play music</span>
+                                </div>
+                            </div>
+
+                            <div class="music-search-container">
+                                <div class="search-box">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="songSearchInput" placeholder="Search for a song or paste a URL..." autocomplete="off">
+                                </div>
+                                <div id="searchResults" class="search-results-dropdown hidden">
+                                    </div>
+                            </div>
+                            
+                            <div class="now-playing">
+                                <div class="album-art" id="albumArt">
+                                    <i class="fa-solid fa-compact-disc fa-spin-slow"></i>
+                                </div>
+                                <div class="track-details">
+                                    <h2 id="currentTrackTitle">Not Playing</h2>
+                                    <p id="currentTrackAuthor">Select a server to view status</p>
+                                </div>
+                            </div>
+
+                            <div class="player-controls">
+                                <div class="seek-bar-container">
+                                    <span id="timeCurrent">0:00</span>
+                                    <input type="range" id="seekBar" min="0" max="100" value="0">
+                                    <span id="timeTotal">0:00</span>
+                                </div>
+                                <div class="control-buttons">
+                                    <button class="btn-icon btn-sm ctrl-btn" id="shuffleBtn" onclick="musicControl('shuffle')" title="Shuffle">
+                                        <i class="fa-solid fa-shuffle"></i>
+                                        <span class="ctrl-tooltip">Shuffle</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn" onclick="musicControl('prev')" title="Previous">
+                                        <i class="fa-solid fa-backward-step"></i>
+                                        <span class="ctrl-tooltip">Previous</span>
+                                    </button>
+                                    <button class="btn-main ctrl-btn" onclick="musicControl('toggle')" id="playPauseBtn">
+                                        <i class="fa-solid fa-play"></i>
+                                        <span class="ctrl-tooltip" id="playPauseTooltip">Play</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn" onclick="musicControl('skip')" title="Skip">
+                                        <i class="fa-solid fa-forward-step"></i>
+                                        <span class="ctrl-tooltip">Skip</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn" id="loopBtn" onclick="handleLoopClick()" title="Loop: Off">
+                                        <i class="fa-solid fa-repeat"></i>
+                                        <span class="ctrl-tooltip" id="loopTooltip">Loop: Off</span>
+                                    </button>
+                                    <button class="btn-icon btn-sm ctrl-btn btn-stop" onclick="musicControl('stop')" title="Stop & Disconnect">
+                                        <i class="fa-solid fa-stop"></i>
+                                        <span class="ctrl-tooltip">Stop</span>
+                                    </button>
+                                </div>
+                                <div class="volume-control">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                    <input type="range" id="volumeSlider" min="0" max="100" value="100">
+                                    <span id="volumeVal" style="font-size:12px;color:var(--text-muted);min-width:30px">100%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lyrics-panel glass">
+                            <div class="lyrics-header">
+                                <h3><i class="fa-solid fa-microphone-lines"></i> Live Lyrics</h3>
+                                <button class="btn-icon btn-sm" id="lyricsSearchToggle" onclick="toggleLyricsSearch()" title="Search Lyrics Manually">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                            <div id="lyricsSearchBox" class="lyrics-search-box hidden">
+                                <input type="text" id="lyricsManualInput" placeholder="Artist - Song title..." autocomplete="off">
+                                <button onclick="manualLyricsSearch()"><i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
                             <div class="lyrics-container" id="lyricsContainer">
                                 <div class="lyric-placeholder">Lyrics will appear here when a song plays...</div>
                             </div>

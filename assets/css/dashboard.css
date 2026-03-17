@@ -956,3 +956,137 @@ input[type="range"]::-webkit-slider-thumb:hover {
     color: var(--danger);
     background: rgba(240, 71, 71, 0.1);
 }
+
+/* Control button tooltips & responsiveness */
+.ctrl-btn {
+    position: relative;
+}
+
+.ctrl-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 20, 28, 0.95);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 6px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    transform: translateX(-50%) translateY(4px);
+    z-index: 100;
+}
+
+.ctrl-btn:hover .ctrl-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Active states for toggle buttons */
+.btn-icon.active {
+    color: var(--primary);
+    text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.btn-icon.active .ctrl-tooltip {
+    color: var(--primary);
+}
+
+/* Loop indicator dot for loop-all mode */
+.btn-icon.loop-all::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 4px var(--primary);
+}
+
+/* Stop button */
+.btn-stop {
+    color: rgba(240, 71, 71, 0.6) !important;
+}
+
+.btn-stop:hover {
+    color: var(--danger) !important;
+    text-shadow: 0 0 10px rgba(240,71,71,0.5);
+}
+
+/* Button press feedback */
+.ctrl-btn:active {
+    transform: scale(0.9);
+}
+
+.btn-main:active {
+    transform: scale(0.92) !important;
+}
+
+/* Lyrics panel header */
+.lyrics-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    z-index: 2;
+}
+
+.lyrics-header h3 {
+    margin-bottom: 0;
+}
+
+/* Manual lyrics search box */
+.lyrics-search-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    animation: promptSlide 0.25s ease;
+}
+
+.lyrics-search-box.hidden { display: none; }
+
+.lyrics-search-box input {
+    flex-grow: 1;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    padding: 7px 12px;
+    outline: none;
+    transition: 0.2s;
+    font-family: 'Outfit', sans-serif;
+}
+
+.lyrics-search-box input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.lyrics-search-box button {
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.lyrics-search-box button:hover {
+    background: #5b73c7;
+    box-shadow: 0 0 10px var(--primary-glow);
+}

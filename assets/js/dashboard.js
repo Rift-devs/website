@@ -69,7 +69,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const volumeSlider = document.getElementById('volumeSlider');
-    volumeSlider.addEventListener('input', () => updateRangeFill(volumeSlider));
+    volumeSlider.addEventListener('input', () => {
+        updateRangeFill(volumeSlider);
+        const val = document.getElementById('volumeVal');
+        if (val) val.textContent = volumeSlider.value + '%';
+    });
     volumeSlider.addEventListener('change', (e) => {
         musicControl('volume', e.target.value);
         updateRangeFill(volumeSlider);
@@ -494,18 +498,31 @@ async function updateMusicState() {
             document.getElementById('currentTrackAuthor').textContent = data.current.author;
             document.getElementById('albumArt').style.backgroundImage = `url(${data.current.artwork || ''})`;
             document.getElementById('albumArt').innerHTML = data.current.artwork ? '' : '<i class="fa-solid fa-compact-disc fa-spin-slow"></i>';
-            document.getElementById('playPauseBtn').innerHTML = data.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+
+            // Update play/pause icon safely without destroying the button
+            const ppIcon = document.querySelector('#playPauseBtn i');
+            if (ppIcon) ppIcon.className = data.paused ? 'fa-solid fa-play' : 'fa-solid fa-pause';
+            const ppTooltip = document.getElementById('playPauseTooltip');
+            if (ppTooltip) ppTooltip.textContent = data.paused ? 'Play' : 'Pause';
+
             document.getElementById('timeTotal').textContent = formatTime(data.current.duration);
 
-            // Reflect loop mode on button
+            // Reflect loop mode — only touch the icon class, never innerHTML the button
             const loopBtn = document.getElementById('loopBtn');
             if (loopBtn) {
                 const loopMode = data.modes?.loop ?? 0;
+                _localLoopMode = loopMode;
+                const loopIcon = loopBtn.querySelector('i');
+                const loopTip = document.getElementById('loopTooltip');
+                // 0 = off, 1 = loop_one, 2 = loop_all
                 loopBtn.classList.toggle('active', loopMode !== 0);
-                loopBtn.title = loopMode === 0 ? 'Loop Off' : loopMode === 1 ? 'Loop One' : 'Loop All';
-                loopBtn.querySelector('i').className = loopMode === 1
-                    ? 'fa-solid fa-repeat-1'
-                    : 'fa-solid fa-repeat';
+                loopBtn.classList.toggle('loop-all', loopMode === 2);
+                if (loopIcon) {
+                    loopIcon.className = loopMode === 1 ? 'fa-solid fa-1 fa-xs' : 'fa-solid fa-repeat';
+                }
+                const labels = ['Loop: Off', 'Loop: One', 'Loop: All'];
+                if (loopTip) loopTip.textContent = labels[loopMode] ?? 'Loop: Off';
+                loopBtn.title = labels[loopMode] ?? 'Loop: Off';
             }
             
             currentTrackDuration = data.current.duration;
@@ -592,6 +609,59 @@ async function musicControl(action, value = null) {
     // Refresh the UI state shortly after the command
     setTimeout(updateMusicState, 600);
 }
+
+/* ================= CONTROL HELPERS ================= */
+// Loop cycles client-side immediately for snappy feedback, backend confirms on next poll
+let _localLoopMode = 0;
+window.handleLoopClick = function() {
+    _localLoopMode = (_localLoopMode + 1) % 3;
+    const loopBtn = document.getElementById('loopBtn');
+    const loopIcon = loopBtn?.querySelector('i');
+    const loopTip = document.getElementById('loopTooltip');
+    const labels = ['Loop: Off', 'Loop: One', 'Loop: All'];
+    if (loopBtn) {
+        loopBtn.classList.toggle('active', _localLoopMode !== 0);
+        loopBtn.classList.toggle('loop-all', _localLoopMode === 2);
+        loopBtn.title = labels[_localLoopMode];
+    }
+    if (loopIcon) loopIcon.className = _localLoopMode === 1 ? 'fa-solid fa-1 fa-xs' : 'fa-solid fa-repeat';
+    if (loopTip) loopTip.textContent = labels[_localLoopMode];
+    musicControl('loop');
+};
+
+/* ================= MANUAL LYRICS SEARCH ================= */
+window.toggleLyricsSearch = function() {
+    const box = document.getElementById('lyricsSearchBox');
+    const isHidden = box.classList.contains('hidden');
+    box.classList.toggle('hidden', !isHidden);
+    if (isHidden) {
+        document.getElementById('lyricsManualInput').focus();
+        document.getElementById('lyricsSearchToggle').classList.add('active');
+    } else {
+        document.getElementById('lyricsSearchToggle').classList.remove('active');
+    }
+};
+
+window.manualLyricsSearch = async function() {
+    const input = document.getElementById('lyricsManualInput').value.trim();
+    if (!input) return;
+
+    // Accept "Artist - Title" or just "Title"
+    let title = input, author = '';
+    if (input.includes(' - ')) {
+        [author, title] = input.split(' - ').map(s => s.trim());
+    }
+    await fetchLyrics(title, author);
+    document.getElementById('lyricsSearchBox').classList.add('hidden');
+    document.getElementById('lyricsSearchToggle').classList.remove('active');
+};
+
+// Enter key triggers search
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.activeElement?.id === 'lyricsManualInput') {
+        window.manualLyricsSearch();
+    }
+});
 
 /* ================= LIVE SYNCED LYRICS ================= */
 async function fetchLyrics(title, author) {
