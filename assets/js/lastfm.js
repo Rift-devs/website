@@ -37,6 +37,8 @@ window.initLastfm = async function() {
     await loadFmNowPlaying();
     await loadFmTopArtists();
     await loadFmTopTracks();
+    loadFmGenres();    // non-blocking — slow API, runs in background
+    loadFmHeatmap();   // non-blocking
 
     // Refresh now playing every 20s
     if (fmRefreshInterval) clearInterval(fmRefreshInterval);
@@ -54,6 +56,7 @@ window.setFmPeriod = async function(period, btn) {
     btn.classList.add('active');
     await loadFmTopArtists();
     await loadFmTopTracks();
+    loadFmGenres();
 };
 
 /* ── Profile ─────────────────────────────── */
@@ -352,4 +355,183 @@ function timeAgo(ms) {
 
 function escHtml(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Genre Breakdown ─────────────────────── */
+let fmGenreChart = null;
+
+async function loadFmGenres() {
+    if (!API_BASE || !fmUserId) return;
+    const loadingEl = document.getElementById('fmGenreLoading');
+    const canvasEl  = document.getElementById('fmGenreChart');
+    const listEl    = document.getElementById('fmGenreList');
+    if (!loadingEl || !canvasEl || !listEl) return;
+
+    loadingEl.style.display = 'flex';
+    canvasEl.style.display  = 'none';
+    listEl.innerHTML        = '';
+
+    try {
+        const res = await fetch(
+            `${API_BASE}/lastfm/genres/${fmUserId}?period=${fmPeriod}`,
+            { headers: { 'ngrok-skip-browser-warning': 'true' } }
+        );
+        const data = await res.json();
+        if (data.error || !data.genres?.length) {
+            loadingEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Not enough data</span>';
+            return;
+        }
+
+        loadingEl.style.display = 'none';
+        canvasEl.style.display  = 'block';
+        renderFmGenreChart(data.genres);
+        renderFmGenreList(data.genres);
+    } catch(e) {
+        if (loadingEl) loadingEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Unavailable</span>';
+        console.error('[LastFM] genres error:', e);
+    }
+}
+
+function renderFmGenreChart(genres) {
+    const ctx = document.getElementById('fmGenreChart')?.getContext('2d');
+    if (!ctx) return;
+
+    const COLORS = [
+        '#7289da','#4ade80','#fb923c','#f472b6','#38bdf8',
+        '#a78bfa','#fbbf24','#34d399'
+    ];
+
+    if (fmGenreChart) fmGenreChart.destroy();
+    fmGenreChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: genres.map(g => g.name),
+            datasets: [{
+                data: genres.map(g => g.score),
+                backgroundColor: COLORS.slice(0, genres.length),
+                borderColor: 'rgba(14,14,18,0.8)',
+                borderWidth: 3,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            responsive: true,
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            cutout: '58%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(10,10,14,0.97)',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                        label: ctx => `  ${ctx.label}  ·  ${ctx.parsed.toFixed(1)}%`
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderFmGenreList(genres) {
+    const el = document.getElementById('fmGenreList');
+    if (!el) return;
+    const COLORS = [
+        '#7289da','#4ade80','#fb923c','#f472b6','#38bdf8',
+        '#a78bfa','#fbbf24','#34d399'
+    ];
+    el.innerHTML = genres.map((g, i) => `
+        <div class="fm-genre-row">
+            <span class="fm-genre-dot" style="background:${COLORS[i] || '#7289da'}"></span>
+            <span class="fm-genre-name">${escHtml(g.name)}</span>
+            <div class="fm-genre-bar-wrap">
+                <div class="fm-genre-bar" style="width:${g.score}%;background:${COLORS[i] || '#7289da'}"></div>
+            </div>
+            <span class="fm-genre-pct">${g.score.toFixed(0)}%</span>
+        </div>`).join('');
+}
+
+/* ── Listening Heatmap ───────────────────── */
+async function loadFmHeatmap() {
+    if (!API_BASE || !fmUserId) return;
+    const wrap = document.getElementById('fmHeatmapWrap');
+    if (!wrap) return;
+
+    wrap.innerHTML = '<div class="lastfm-nothing"><i class="fa-solid fa-circle-notch fa-spin"></i></div>';
+
+    try {
+        const res = await fetch(
+            `${API_BASE}/lastfm/heatmap/${fmUserId}`,
+            { headers: { 'ngrok-skip-browser-warning': 'true' } }
+        );
+        const data = await res.json();
+        if (data.error || !data.weeks?.length) {
+            wrap.innerHTML = '<div class="lastfm-nothing" style="font-size:12px">Not enough history data</div>';
+            return;
+        }
+        renderFmHeatmap(data.weeks, wrap);
+    } catch(e) {
+        wrap.innerHTML = '<div class="lastfm-nothing" style="font-size:12px">Unavailable</div>';
+        console.error('[LastFM] heatmap error:', e);
+    }
+}
+
+function renderFmHeatmap(weeks, wrap) {
+    // weeks = [{from: ts, count: n}, ...]  — up to 52
+    const counts = weeks.map(w => w.count);
+    const max    = Math.max(...counts, 1);
+
+    // Build month labels from timestamps
+    const months  = [];
+    let lastMonth = -1;
+    weeks.forEach((w, i) => {
+        const d = new Date(w.from * 1000);
+        const m = d.getMonth();
+        if (m !== lastMonth) {
+            months.push({ idx: i, label: d.toLocaleDateString('en', { month: 'short' }) });
+            lastMonth = m;
+        }
+    });
+
+    // Build SVG — each week is one column of 1 cell (weekly data)
+    const CELL  = 14;
+    const GAP   = 3;
+    const W     = weeks.length * (CELL + GAP);
+    const H     = CELL + 28; // 1 row + label area
+
+    let cells = '';
+    weeks.forEach((w, i) => {
+        const intensity = w.count / max;
+        const alpha     = w.count === 0 ? 0.07 : 0.2 + intensity * 0.8;
+        const x         = i * (CELL + GAP);
+        const title     = `${new Date(w.from * 1000).toLocaleDateString('en', {month:'short', day:'numeric'})} · ${w.count} scrobbles`;
+        cells += `<rect x="${x}" y="0" width="${CELL}" height="${CELL}" rx="3"
+            fill="rgba(114,137,218,${alpha.toFixed(2)})"
+            stroke="rgba(255,255,255,0.04)" stroke-width="0.5">
+            <title>${title}</title>
+        </rect>`;
+    });
+
+    let labels = '';
+    months.forEach(m => {
+        const x = m.idx * (CELL + GAP);
+        labels += `<text x="${x}" y="${CELL + 16}" font-size="10" fill="rgba(160,160,168,0.7)"
+            font-family="Outfit,sans-serif">${m.label}</text>`;
+    });
+
+    wrap.innerHTML = `
+        <div class="fm-heatmap-scroll">
+            <svg width="${W}" height="${H}" style="display:block">
+                ${cells}
+                ${labels}
+            </svg>
+        </div>
+        <div class="fm-heatmap-legend">
+            <span>Less</span>
+            ${[0.07, 0.25, 0.45, 0.65, 0.9].map(a =>
+                `<span class="fm-heatmap-swatch" style="background:rgba(114,137,218,${a})"></span>`
+            ).join('')}
+            <span>More</span>
+        </div>`;
 }

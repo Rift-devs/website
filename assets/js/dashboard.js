@@ -107,6 +107,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Start Animation Loop for smooth progress & lyrics
     requestAnimationFrame(animationLoop);
+
+    // Init waveform visualizer (deferred so canvas is sized)
+    setTimeout(() => _wv.init(), 100);
 });
 
 /* ================= BACKGROUND ANIMATION ================= */
@@ -176,7 +179,7 @@ function initTabs() {
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             document.getElementById(target).classList.add('active');
 
-            const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm' };
+            const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm', moderation: 'Moderation & Analytics' };
             document.getElementById('activeTabTitle').textContent = titles[target] || target;
 
             if (target === 'stocks' && typeof window.initStocks === 'function') window.initStocks();
@@ -719,26 +722,126 @@ async function updateMusicState() {
     }
 }
 
-// Advanced Queue Management (UI implementation sends signals to API)
+// ── Waveform visualizer ────────────────────────────────────────────────────
+const _wv = {
+    ctx: null, bars: [], animId: null,
+    WIDTH: 0, HEIGHT: 0,
+    NUM: 28,
+    init() {
+        const canvas = document.getElementById('waveformCanvas');
+        if (!canvas) return;
+        this.ctx = canvas.getContext('2d');
+        this.WIDTH  = canvas.offsetWidth  || 220;
+        this.HEIGHT = canvas.offsetHeight || 36;
+        canvas.width  = this.WIDTH  * window.devicePixelRatio;
+        canvas.height = this.HEIGHT * window.devicePixelRatio;
+        this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        this.bars = Array.from({length: this.NUM}, (_, i) => ({
+            h:    Math.random() * 0.4 + 0.1,
+            target: Math.random() * 0.4 + 0.1,
+            phase: (i / this.NUM) * Math.PI * 2,
+            speed: 0.025 + Math.random() * 0.02,
+        }));
+        if (!this.animId) this._draw();
+    },
+    _draw() {
+        this.animId = requestAnimationFrame(() => this._draw());
+        if (!this.ctx) return;
+        const { ctx, WIDTH, HEIGHT, bars, NUM } = this;
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        const barW   = WIDTH / NUM;
+        const gap    = barW * 0.35;
+        const bw     = barW - gap;
+        const active = isPlaying;
+
+        bars.forEach((b, i) => {
+            if (active) {
+                b.phase += b.speed;
+                b.target = 0.15 + Math.abs(Math.sin(b.phase + i * 0.4)) * 0.82;
+            } else {
+                b.target = 0.08 + Math.sin(i * 0.6) * 0.04;
+            }
+            b.h += (b.target - b.h) * 0.12;
+            const barH = Math.max(3, b.h * HEIGHT);
+            const x    = i * barW + gap / 2;
+            const y    = (HEIGHT - barH) / 2;
+            const alpha = active ? 0.55 + b.h * 0.45 : 0.2;
+            ctx.fillStyle = `rgba(114,137,218,${alpha})`;
+            ctx.beginPath();
+            ctx.roundRect(x, y, bw, barH, bw / 2);
+            ctx.fill();
+        });
+    },
+};
+
+// Advanced Queue Management with drag-to-reorder
+let _dragSrcIdx = null;
+
 function renderQueue(queue) {
     const list = document.getElementById('queueList');
     if (!queue || queue.length === 0) {
         list.innerHTML = '<li class="empty-msg">Queue is empty</li>';
         return;
     }
+
+    // Preserve scroll position
+    const scrollTop = list.scrollTop;
+
     list.innerHTML = queue.map((t, i) => `
-        <li class="queue-item">
-            <div class="q-title">${i+1}. ${t.title}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="q-author">${t.author} (${formatTime(t.duration)})</span>
-                <div class="q-controls">
-                    <button class="q-btn" onclick="musicControl('play_now', ${i})" title="Play Now"><i class="fa-solid fa-play"></i></button>
-                    <button class="q-btn" onclick="musicControl('move_up', ${i})" title="Move Up"><i class="fa-solid fa-arrow-up"></i></button>
-                    <button class="q-btn danger" onclick="musicControl('remove', ${i})" title="Remove"><i class="fa-solid fa-xmark"></i></button>
-                </div>
+        <li class="queue-item" draggable="true" data-idx="${i}">
+            <div class="q-drag-handle" title="Drag to reorder">
+                <i class="fa-solid fa-grip-vertical"></i>
             </div>
-        </li>
-    `).join('');
+            <div class="q-thumb" style="${t.artwork ? `background-image:url(${t.artwork})` : 'background:rgba(114,137,218,0.15)'}">
+                ${t.artwork ? '' : '<i class="fa-solid fa-music"></i>'}
+            </div>
+            <div class="q-body">
+                <span class="q-title">${escQueue(t.title)}</span>
+                <span class="q-author">${escQueue(t.author)} · ${formatTime(t.duration)}</span>
+            </div>
+            <div class="q-controls">
+                <button class="q-btn" onclick="musicControl('play_now',${i})" title="Play now">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+                <button class="q-btn danger" onclick="musicControl('remove',${i})" title="Remove">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </li>`).join('');
+
+    list.scrollTop = scrollTop;
+
+    // Attach drag events
+    list.querySelectorAll('.queue-item').forEach(item => {
+        item.addEventListener('dragstart', e => {
+            _dragSrcIdx = parseInt(item.dataset.idx);
+            item.classList.add('q-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        item.addEventListener('dragend', () => {
+            item.classList.remove('q-dragging');
+            list.querySelectorAll('.queue-item').forEach(i => i.classList.remove('q-drag-over'));
+        });
+        item.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            list.querySelectorAll('.queue-item').forEach(i => i.classList.remove('q-drag-over'));
+            item.classList.add('q-drag-over');
+        });
+        item.addEventListener('drop', e => {
+            e.preventDefault();
+            const toIdx = parseInt(item.dataset.idx);
+            if (_dragSrcIdx === null || _dragSrcIdx === toIdx) return;
+            // Tell backend to move: remove from src, insert at dest
+            musicControl('move_to', { from: _dragSrcIdx, to: toIdx });
+            _dragSrcIdx = null;
+            item.classList.remove('q-drag-over');
+        });
+    });
+}
+
+function escQueue(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function resetPlayer() {

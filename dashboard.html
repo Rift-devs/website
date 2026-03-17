@@ -40,7 +40,7 @@
                 </li>
                 <li data-tab="moderation">
                     <i class="fa-solid fa-shield-halved"></i>
-                    <span>Moderation</span>
+                    <span>Moderation & Analytics</span>
                 </li>
                 <li class="nav-coming-soon" data-tab="">
                     <i class="fa-solid fa-sliders"></i>
@@ -156,6 +156,7 @@
                                 <div class="track-details">
                                     <h2 id="currentTrackTitle">Not Playing</h2>
                                     <p id="currentTrackAuthor">Select a server to view status</p>
+                                    <canvas id="waveformCanvas" class="waveform-canvas"></canvas>
                                 </div>
                             </div>
 
@@ -453,7 +454,27 @@
                                 <canvas id="fmTracksChart" height="160"></canvas>
                                 <div id="fmTracksList" class="lastfm-top-list"></div>
                             </div>
+
+                            <!-- Genre breakdown -->
+                            <div class="glass lastfm-chart-card">
+                                <div class="lastfm-section-label"><i class="fa-solid fa-tag"></i> Genre Breakdown</div>
+                                <div id="fmGenreLoading" class="lastfm-nothing" style="padding:20px 0">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                </div>
+                                <canvas id="fmGenreChart" height="180" style="display:none"></canvas>
+                                <div id="fmGenreList" class="fm-genre-list"></div>
+                            </div>
+
                         </div>
+
+                        <!-- Full-width: Listening Heatmap -->
+                        <div class="glass lastfm-heatmap-card">
+                            <div class="lastfm-section-label"><i class="fa-solid fa-calendar-days"></i> Listening Heatmap <span class="lastfm-heatmap-sub">last 52 weeks</span></div>
+                            <div id="fmHeatmapWrap" class="fm-heatmap-wrap">
+                                <div class="lastfm-nothing"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                            </div>
+                        </div>
+
                     </div>
                 </section>
 
@@ -670,6 +691,51 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- FULL-WIDTH SERVER ANALYTICS -->
+                        <div class="analytics-section glass">
+                            <div class="analytics-header">
+                                <span class="mod-section-label"><i class="fa-solid fa-chart-line"></i> Server Analytics</span>
+                                <div class="analytics-server-info" id="analyticsServerInfo"></div>
+                                <div class="analytics-range-btns">
+                                    <button class="analytics-range-btn active" data-days="7"  onclick="setAnalyticsRange(7, this)">7D</button>
+                                    <button class="analytics-range-btn"        data-days="14" onclick="setAnalyticsRange(14,this)">14D</button>
+                                </div>
+                            </div>
+                            <div class="analytics-stats-row" id="analyticsStatsRow">
+                                <div class="analytics-stat-card">
+                                    <i class="fa-solid fa-users"></i>
+                                    <div><span class="analytics-stat-val" id="anaMembers">—</span><span class="analytics-stat-label">Members</span></div>
+                                </div>
+                                <div class="analytics-stat-card">
+                                    <i class="fa-solid fa-circle" style="color:#23a559"></i>
+                                    <div><span class="analytics-stat-val" id="anaOnline">—</span><span class="analytics-stat-label">Online</span></div>
+                                </div>
+                                <div class="analytics-stat-card">
+                                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                                    <div><span class="analytics-stat-val" id="anaJoins">—</span><span class="analytics-stat-label">Joins (7d)</span></div>
+                                </div>
+                                <div class="analytics-stat-card">
+                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                    <div><span class="analytics-stat-val" id="anaLeaves">—</span><span class="analytics-stat-label">Leaves (7d)</span></div>
+                                </div>
+                                <div class="analytics-stat-card">
+                                    <i class="fa-solid fa-message"></i>
+                                    <div><span class="analytics-stat-val" id="anaMessages">—</span><span class="analytics-stat-label">Messages (7d)</span></div>
+                                </div>
+                            </div>
+                            <div class="analytics-charts-grid">
+                                <div class="analytics-chart-card">
+                                    <div class="analytics-chart-label">Members</div>
+                                    <canvas id="anaJoinChart" height="120"></canvas>
+                                </div>
+                                <div class="analytics-chart-card">
+                                    <div class="analytics-chart-label">Messages</div>
+                                    <canvas id="anaMsgChart" height="120"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </section>
 

@@ -33,6 +33,7 @@ window.initModeration = async function() {
         loadModLog(),
         loadBanList(),
         loadRoles(),
+        loadServerAnalytics(),
     ]);
     modInitDone = true;
 };
@@ -801,4 +802,145 @@ function actionIcon(action) {
         role_remove:'➖', nick:'✏️', mute:'🔇', unmute:'🔊',
     };
     return icons[action] || '📋';
+}
+
+/* ═══════════════════════════════════════════
+   SERVER ANALYTICS
+═══════════════════════════════════════════ */
+
+let anaJoinChart  = null;
+let anaMsgChart   = null;
+let anaRawData    = null;
+let anaDays       = 7;
+
+window.setAnalyticsRange = function(days, btn) {
+    anaDays = days;
+    document.querySelectorAll('.analytics-range-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (anaRawData) renderAnalyticsCharts(anaRawData);
+};
+
+async function loadServerAnalytics() {
+    if (!API_BASE || !modGuildId) return;
+
+    // Reset stat cards
+    ['anaMembers','anaOnline','anaJoins','anaLeaves','anaMessages'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '—';
+    });
+
+    try {
+        const res = await fetch(`${API_BASE}/analytics/${modGuildId}`, {
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        const data = await res.json();
+        if (data.error) return;
+
+        anaRawData = data;
+
+        // Server info badge
+        const infoEl = document.getElementById('analyticsServerInfo');
+        if (infoEl) infoEl.textContent = data.guild_name || '';
+
+        // Stat cards
+        const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val ?? '—'; };
+        set('anaMembers', (data.member_count || 0).toLocaleString());
+        set('anaOnline',  (data.online_count || 0).toLocaleString());
+
+        // Sum last 7 days
+        const last7 = (arr) => (arr || []).slice(-7).reduce((a, b) => a + b, 0);
+        set('anaJoins',    last7(data.joins).toLocaleString());
+        set('anaLeaves',   last7(data.leaves).toLocaleString());
+        set('anaMessages', last7(data.messages).toLocaleString());
+
+        renderAnalyticsCharts(data);
+    } catch(e) { console.error('[Analytics]', e); }
+}
+
+function renderAnalyticsCharts(data) {
+    const days    = anaDays;
+    const labels  = (data.dates  || []).slice(-days);
+    const joins   = (data.joins  || []).slice(-days);
+    const leaves  = (data.leaves || []).slice(-days);
+    const msgs    = (data.messages || []).slice(-days);
+
+    // Short date labels
+    const shortLabels = labels.map(d => {
+        const dt = new Date(d);
+        return dt.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    });
+
+    const chartDefaults = {
+        responsive: true,
+        animation: { duration: 500 },
+        plugins: {
+            legend: { display: true, labels: { color: '#a0a0a8', font: { size: 11 }, boxWidth: 10, usePointStyle: true } },
+            tooltip: {
+                backgroundColor: 'rgba(10,10,14,0.97)',
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                padding: 10,
+            }
+        },
+        scales: {
+            x: { grid: { display: false }, ticks: { color: '#a0a0a8', maxRotation: 0, font: { size: 10 } } },
+            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a0a0a8', precision: 0 }, beginAtZero: true }
+        }
+    };
+
+    // Joins vs Leaves chart
+    const joinCtx = document.getElementById('anaJoinChart')?.getContext('2d');
+    if (joinCtx) {
+        if (anaJoinChart) anaJoinChart.destroy();
+        anaJoinChart = new Chart(joinCtx, {
+            type: 'bar',
+            data: {
+                labels: shortLabels,
+                datasets: [
+                    {
+                        label: 'Joins',
+                        data: joins,
+                        backgroundColor: 'rgba(67,181,129,0.7)',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Leaves',
+                        data: leaves,
+                        backgroundColor: 'rgba(240,71,71,0.55)',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }
+                ]
+            },
+            options: { ...chartDefaults }
+        });
+    }
+
+    // Messages chart
+    const msgCtx = document.getElementById('anaMsgChart')?.getContext('2d');
+    if (msgCtx) {
+        if (anaMsgChart) anaMsgChart.destroy();
+        const gradient = msgCtx.createLinearGradient(0, 0, 0, 160);
+        gradient.addColorStop(0,   'rgba(114,137,218,0.6)');
+        gradient.addColorStop(1,   'rgba(114,137,218,0.02)');
+        anaMsgChart = new Chart(msgCtx, {
+            type: 'line',
+            data: {
+                labels: shortLabels,
+                datasets: [{
+                    label: 'Messages',
+                    data: msgs,
+                    borderColor: '#7289da',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#7289da',
+                    fill: true,
+                    tension: 0.4,
+                }]
+            },
+            options: { ...chartDefaults }
+        });
+    }
 }
