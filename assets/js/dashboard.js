@@ -179,12 +179,13 @@ function initTabs() {
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             document.getElementById(target).classList.add('active');
 
-            const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm', moderation: 'Moderation & Analytics' };
+            const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm', moderation: 'Moderation & Analytics', settings: 'Settings' };
             document.getElementById('activeTabTitle').textContent = titles[target] || target;
 
             if (target === 'stocks' && typeof window.initStocks === 'function') window.initStocks();
             if (target === 'lastfm' && typeof window.initLastfm === 'function') window.initLastfm();
             if (target === 'moderation' && typeof window.initModeration === 'function') window.initModeration();
+            if (target === 'settings' && typeof window.initSettings === 'function') window.initSettings();
 
             if (window.innerWidth <= 768) closeSidebar();
         });
@@ -287,6 +288,8 @@ async function fetchProfile(token) {
         }
 
         hideLoginWall();
+        // Apply saved theme prefs immediately on login
+        if (typeof window.applyStoredPrefs === 'function') window.applyStoredPrefs();
         renderUserCard(userProfile);
         fetchGuilds(token);
     } catch (e) {
