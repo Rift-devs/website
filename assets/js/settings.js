@@ -344,7 +344,6 @@ window.setFont = function(font, btn) {
 
 function applyFont(font) {
     const clean = font.replace(/'/g, '');
-    // Inject a Google Fonts link if not already loaded
     const fontId = `gf-${clean.replace(/\s/g,'-')}`;
     if (!document.getElementById(fontId)) {
         const link = document.createElement('link');
@@ -355,10 +354,17 @@ function applyFont(font) {
     }
     document.documentElement.style.setProperty('--font-family', font);
     document.body.style.fontFamily = `${font}, sans-serif`;
-    // Update all elements via CSS variable
+    // Override font BUT explicitly exclude Font Awesome icon elements
     const style = document.getElementById('rift-font-override') || document.createElement('style');
     style.id = 'rift-font-override';
-    style.textContent = `*, button, input, select, textarea { font-family: ${font}, sans-serif !important; }`;
+    style.textContent = `
+        *:not(i), button:not(i), input, select, textarea {
+            font-family: ${font}, sans-serif !important;
+        }
+        i[class*="fa-"] {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+        }
+    `;
     if (!style.parentNode) document.head.appendChild(style);
 }
 
