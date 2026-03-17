@@ -1,25 +1,32 @@
-// Configuration — loaded dynamically so a bot restart (new ngrok URL) never breaks the dashboard
+// Configuration — API_BASE is set via ?api= query param (printed by bot on startup)
+// and persisted in localStorage so it survives page refreshes.
 const CLIENT_ID = "1329184069426348052";
 let API_BASE = null;
 let WS_URL = null;
 
 async function loadConfig() {
-    try {
-        // api-config.json is written by web_server.py on every startup with the live ngrok URL
-        const res = await fetch('/api-config.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const cfg = await res.json();
-        API_BASE = cfg.api_base;
-        WS_URL = cfg.ws_url;
-    } catch (e) {
-        // Fallback: assume we're being served directly by the bot (relative URLs)
-        console.warn('api-config.json not found, falling back to relative URLs:', e.message);
-        const proto = window.location.protocol;
-        const host = window.location.host;
-        API_BASE = `${proto}//${host}/api`;
-        WS_URL = `${proto === 'https:' ? 'wss' : 'ws'}://${host}/ws`;
+    // 1. Check for ?api= in the URL (bot prints this link on every startup)
+    const params = new URLSearchParams(window.location.search);
+    const apiParam = params.get('api');
+    if (apiParam) {
+        localStorage.setItem('rift_api_base', apiParam);
+        // Clean the param from the URL bar without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
-    console.log(`[Config] API_BASE=${API_BASE}`);
+
+    // 2. Use stored value
+    const stored = localStorage.getItem('rift_api_base');
+    if (stored) {
+        API_BASE = stored.replace(/\/$/, '') + '/api';
+        WS_URL = stored.replace('https://', 'wss://').replace('http://', 'ws://').replace(/\/$/, '') + '/ws';
+        console.log(`[Config] API_BASE=${API_BASE}`);
+        return;
+    }
+
+    // 3. Nothing configured yet
+    console.warn('[Config] No API base set. Open the dashboard URL printed by the bot on startup.');
+    API_BASE = null;
+    WS_URL = null;
 }
 
 // State
@@ -260,6 +267,7 @@ function renderServerGrid(guilds) {
 
 /* ================= SEARCH ENGINE ================= */
 async function searchMusic(query) {
+    if (!API_BASE) { console.warn('[Search] API_BASE not set — open the bot startup URL first'); return; }
     try {
         console.log(`[Search] Querying: "${query}"`);
         console.log(`[Search] POST → ${API_BASE}/music/search`);
@@ -313,7 +321,7 @@ document.addEventListener('click', (e) => {
 let currentTrackUri = null;
 
 async function updateMusicState() {
-    if (!selectedGuildId) return;
+    if (!selectedGuildId || !API_BASE) return;
     
     try {
         const res = await fetch(`${API_BASE}/music/state/${selectedGuildId}`, {
