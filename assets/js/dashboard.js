@@ -1,8 +1,7 @@
-// Configuration
-// API_BASE is discovered automatically via JSONBin — works for all users on rift.baby
-const CLIENT_ID   = "1329184069426348052";
-const JSONBIN_BIN_ID  = "69b98a6aaa77b81da9f28e54";
-const JSONBIN_API_KEY = "$2a$10$NTt2jhqyyVlb8/PbL7kJu.NVeu9OcAanj0/D9bkWRNgOyhz9oSugi";
+// Configuration — live ngrok URL fetched from GitHub Gist on every page load.
+// Works for ALL users on rift.baby with no setup required on their end.
+const CLIENT_ID  = "1329184069426348052";
+const GIST_ID    = "73548af0931ee1c58031df6ca5614e13"; // ← paste your Gist ID
 let API_BASE = null;
 let WS_URL   = null;
 
@@ -15,27 +14,29 @@ async function loadConfig() {
         return;
     }
 
-    // 2. JSONBin — live URL pushed by bot on every startup, works for everyone
+    // 2. GitHub Gist — bot pushes live URL here on every startup.
+    //    Raw gist URLs are public and have no rate limits.
     try {
+        // Use the raw gist URL — no auth needed, no limits
         const res = await fetch(
-            `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`,
-            { headers: { 'X-Access-Key': JSONBIN_API_KEY } }
+            `https://gist.githubusercontent.com/raw/${GIST_ID}/rift-api.json`,
+            { cache: 'no-store' }
         );
         if (res.ok) {
             const data = await res.json();
-            const url  = data?.record?.api;
+            const url  = data?.api;
             if (url) {
                 API_BASE = url.replace(/\/$/, '') + '/api';
                 WS_URL   = url.replace('https://', 'wss://').replace('http://', 'ws://').replace(/\/$/, '') + '/ws';
-                console.log(`[Config] API_BASE=${API_BASE} (JSONBin)`);
+                console.log(`[Config] API_BASE=${API_BASE} (Gist)`);
                 return;
             }
         }
     } catch(e) {
-        console.warn('[Config] JSONBin fetch failed:', e.message);
+        console.warn('[Config] Gist fetch failed:', e.message);
     }
 
-    console.warn('[Config] Bot may be offline or JSONBin not configured.');
+    console.warn('[Config] Bot may be offline.');
     API_BASE = null;
     WS_URL   = null;
 }
