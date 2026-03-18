@@ -16,8 +16,7 @@ window.initLastfm = async function() {
     }
     fmUserId = userProfile.id;
 
-    // Show loading state instead of "not linked" while waiting for API
-    document.getElementById('lastfmNotLinked').classList.add('hidden');
+    // Show loading state while waiting for API
     document.getElementById('lastfmProfileInner').classList.add('hidden');
 
     // Wait up to 3s for API_BASE to be ready (Gist fetch may still be in progress)
@@ -69,7 +68,6 @@ async function loadFmProfile() {
         const data = await res.json();
         if (data.error) { showFmNotLinked(); return; }
 
-        document.getElementById('lastfmNotLinked').classList.add('hidden');
         document.getElementById('lastfmProfileInner').classList.remove('hidden');
 
         const avatarEl = document.getElementById('lastfmAvatar');
@@ -100,7 +98,6 @@ async function loadFmProfile() {
 }
 
 function showFmNotLinked() {
-    document.getElementById('lastfmNotLinked').classList.remove('hidden');
     document.getElementById('lastfmProfileInner').classList.add('hidden');
 }
 

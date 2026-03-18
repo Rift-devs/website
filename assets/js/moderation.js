@@ -24,7 +24,7 @@ window.initModeration = async function() {
     if (!API_BASE) return;
 
     if (!modGuildId) {
-        showModHint('Select a server first using the dropdown on the Music tab, then come back here.');
+        showModHint('Select a server using the dropdown above.');
         return;
     }
 
@@ -377,7 +377,7 @@ window.addNote = async function() {
     const input = document.getElementById('modNoteInput');
     const note = input?.value.trim();
     if (!note || !modActionTarget) return;
-    const res = await modApiAction('note', modActionTarget.id, '', {note}, {});
+    const res = await modApiAction('note', modActionTarget.id, note, {}, {note});
     if (res?.status === 'note_added') {
         input.value = '';
         showModToast('Note added', 'success');
@@ -548,6 +548,10 @@ window.confirmAction = async function() {
     const action = modPendingAction;
     if (!action) return;
 
+    // Refresh modGuildId from whichever source is current
+    modGuildId = window._modGuildId || window._selectedGuildId || window.selectedGuildId || modGuildId;
+    if (!modGuildId) { showModalResult('error', 'Select a server first'); return; }
+
     // Resolve target
     let targetId = modActionTarget?.id;
     const manualInput = document.getElementById('modModalUserInput');
@@ -622,13 +626,16 @@ function showModalResult(type, msg) {
 
 /* ── Shared API call ─────────────────────── */
 async function modApiAction(action, targetId, reason, opts = {}, extra = {}) {
+    modGuildId = window._modGuildId || window._selectedGuildId || window.selectedGuildId || modGuildId;
     if (!API_BASE || !modGuildId) return null;
     try {
+        const gid = parseInt(modGuildId);
+        if (!gid) return { error: 'No server selected' };
         const res = await fetch(`${API_BASE}/mod/action`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
             body: JSON.stringify({
-                guild_id: modGuildId,
+                guild_id: gid,
                 mod_id: userProfile?.id || 0,
                 action,
                 target: String(targetId),
