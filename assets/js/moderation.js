@@ -629,7 +629,7 @@ async function modApiAction(action, targetId, reason, opts = {}, extra = {}) {
     modGuildId = window._modGuildId || window._selectedGuildId || window.selectedGuildId || modGuildId;
     if (!API_BASE || !modGuildId) return null;
     try {
-        const gid = parseInt(modGuildId);
+        const gid = modGuildId; // keep as string — server does int() which handles it fine
         if (!gid) return { error: 'No server selected' };
         const res = await fetch(`${API_BASE}/mod/action`, {
             method: 'POST',
