@@ -1,44 +1,11 @@
-// Configuration — live ngrok URL fetched from GitHub Gist on every page load.
-// Works for ALL users on rift.baby with no setup required on their end.
-const CLIENT_ID  = "1329184069426348052";
-const GIST_ID    = "73548af0931ee1c58031df6ca5614e13"; // ← paste your Gist ID
-let API_BASE = null;
-let WS_URL   = null;
+// API is permanently at api.rift.baby via Cloudflare Worker — no Gist needed.
+const CLIENT_ID = "1329184069426348052";
+const API_BASE  = "https://api.rift.baby/api";
+const WS_URL    = "wss://api.rift.baby/ws";
+console.log('[Config] API_BASE=https://api.rift.baby/api (static)');
 
 async function loadConfig() {
-    // 1. Server-injected globals (when visiting the ngrok URL directly)
-    if (window.__RIFT_API_BASE__) {
-        API_BASE = window.__RIFT_API_BASE__;
-        WS_URL   = window.__RIFT_WS_URL__;
-        console.log(`[Config] API_BASE=${API_BASE} (server-injected)`);
-        return;
-    }
-
-    // 2. GitHub Gist — bot pushes live URL here on every startup.
-    //    Raw gist URLs are public and have no rate limits.
-    try {
-        // Use the raw gist URL — no auth needed, no limits
-        const res = await fetch(
-            `https://gist.githubusercontent.com/raw/${GIST_ID}/rift-api.json`,
-            { cache: 'no-store' }
-        );
-        if (res.ok) {
-            const data = await res.json();
-            const url  = data?.api;
-            if (url) {
-                API_BASE = url.replace(/\/$/, '') + '/api';
-                WS_URL   = url.replace('https://', 'wss://').replace('http://', 'ws://').replace(/\/$/, '') + '/ws';
-                console.log(`[Config] API_BASE=${API_BASE} (Gist)`);
-                return;
-            }
-        }
-    } catch(e) {
-        console.warn('[Config] Gist fetch failed:', e.message);
-    }
-
-    console.warn('[Config] Bot may be offline.');
-    API_BASE = null;
-    WS_URL   = null;
+    // Nothing to load — URL is permanent
 }
 
 // State
