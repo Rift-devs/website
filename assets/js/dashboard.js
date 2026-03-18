@@ -486,6 +486,7 @@ async function fetchGuilds(token) {
             closeGuildDropdown();
             updateMusicState();
             loadChosenForYou();
+            loadMusicHistory();
             if (userProfile && API_BASE) checkUserVoiceInGuild(g.id, g.name);
         });
 
@@ -493,7 +494,66 @@ async function fetchGuilds(token) {
     });
 
     renderServerGrid(adminGuilds);
+
+    // Populate tab-specific guild dropdowns (stocks + moderation)
+    populateTabGuildDropdowns(adminGuilds);
 }
+
+/* ── Tab Guild Dropdowns (Stocks + Moderation) ──────────────── */
+let _allGuilds = [];
+
+function populateTabGuildDropdowns(guilds) {
+    _allGuilds = guilds;
+    ['stocks', 'mod'].forEach(tab => {
+        const menu = document.getElementById(`${tab}GuildMenu`);
+        if (!menu) return;
+        menu.innerHTML = guilds.map(g => {
+            const icon = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null;
+            return `<div class="tab-guild-item" onclick="selectTabGuild('${tab}','${g.id}','${g.name.replace(/'/g,"\\'")}','${icon||''}')">
+                ${icon ? `<img src="${icon}" alt="">` : `<div class="guild-initial" style="width:20px;height:20px;font-size:10px">${g.name[0]}</div>`}
+                <span>${g.name}</span>
+            </div>`;
+        }).join('');
+    });
+}
+
+window.toggleTabGuildDropdown = function(tab) {
+    const menu = document.getElementById(`${tab}GuildMenu`);
+    if (!menu) return;
+    const isOpen = !menu.classList.contains('hidden');
+    // close all first
+    document.querySelectorAll('.tab-guild-menu').forEach(m => m.classList.add('hidden'));
+    if (!isOpen) menu.classList.remove('hidden');
+    // close on outside click
+    setTimeout(() => {
+        document.addEventListener('click', function _close(e) {
+            if (!e.target.closest(`#${tab}GuildDropdown`)) {
+                menu.classList.add('hidden');
+                document.removeEventListener('click', _close);
+            }
+        });
+    }, 10);
+};
+
+window.selectTabGuild = function(tab, guildId, guildName, iconUrl) {
+    const label = document.getElementById(`${tab}GuildLabel`);
+    if (label) label.textContent = guildName;
+    const menu = document.getElementById(`${tab}GuildMenu`);
+    if (menu) menu.classList.add('hidden');
+
+    if (tab === 'stocks') {
+        window._selectedGuildId = guildId;
+        window._stocksGuildId   = guildId;
+        if (typeof window.initStocks === 'function') window.initStocks();
+    } else if (tab === 'mod') {
+        window._modGuildId = guildId;
+        // Also sync modGuildId in moderation module
+        if (typeof window.initModeration === 'function') {
+            window._selectedGuildId = guildId;
+            window.initModeration();
+        }
+    }
+};
 
 function toggleGuildDropdown() {
     const menu = document.getElementById('guildDropdownMenu');
@@ -512,9 +572,10 @@ function closeGuildDropdown() {
     document.getElementById('guildDropdownSelected').classList.remove('open');
 }
 
-/* ================= VC AUTO-PROMPT ================= */
+/* ================= VC AUTO-PROMPT + AUTO-JOIN ================= */
 let _autoVcGuildId = null;
 let _autoVcChannelName = null;
+let _vcPollInterval = null;
 
 async function checkUserVoiceInGuild(guildId, guildName) {
     if (!userProfile || !API_BASE) return;
@@ -524,16 +585,50 @@ async function checkUserVoiceInGuild(guildId, guildName) {
         });
         const data = await res.json();
         if (data.in_voice) {
-            _autoVcGuildId = guildId;
+            _autoVcGuildId     = guildId;
             _autoVcChannelName = data.channel_name;
             const members = data.member_count;
-            document.getElementById('vcAutoPromptMsg').textContent =
-                `You're in #${data.channel_name} on ${guildName}${members > 1 ? ` (${members} members)` : ''}`;
-            document.getElementById('vcAutoPromptSub').textContent =
-                'Want Rift to use your current channel?';
-            document.getElementById('vcAutoPrompt').classList.remove('hidden');
+
+            // Auto-join the channel immediately — no need for the user to click
+            autoJoinUserVc(guildId, data.channel_id, guildName, data.channel_name, members);
         }
     } catch (_) {}
+}
+
+async function autoJoinUserVc(guildId, channelId, guildName, channelName, members) {
+    // Show the prompt AND immediately tell the bot to join
+    document.getElementById('vcAutoPromptMsg').textContent =
+        `Joining #${channelName} on ${guildName}${members > 1 ? ` (${members} members)` : ''}…`;
+    document.getElementById('vcAutoPromptSub').textContent =
+        'Rift is connecting…';
+    document.getElementById('vcAutoPrompt').classList.remove('hidden');
+
+    if (!API_BASE || !guildId) return;
+    try {
+        // Tell the bot to join the channel (self_deaf=True enforced server-side via _connect_player)
+        const res = await fetch(`${API_BASE}/music/control`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+            body: JSON.stringify({
+                guild_id: guildId,
+                user_id:  userProfile?.id,
+                action:   'join',
+                value:    channelId,
+            }),
+        });
+        const data = await res.json();
+        if (data.status === 'joined' || data.status === 'already_connected') {
+            document.getElementById('vcAutoPromptMsg').textContent =
+                `Connected to #${channelName}${members > 1 ? ` (${members} members)` : ''}`;
+            document.getElementById('vcAutoPromptSub').textContent =
+                'Search a song or pick from Chosen For You';
+            setTimeout(() => dismissAutoVc(), 4000);
+        } else {
+            dismissAutoVc();
+        }
+    } catch(_) {
+        dismissAutoVc();
+    }
 }
 
 window.acceptAutoVc = function() {
@@ -586,6 +681,61 @@ function renderServerGrid(guilds) {
             <div style="font-weight:600;">${g.name}</div>
         </div>
     `).join('');
+}
+
+/* ================= MUSIC HISTORY & TOP SONGS ================= */
+window.loadMusicHistory = async function() {
+    if (!API_BASE || !selectedGuildId) return;
+    try {
+        const [histRes, topRes] = await Promise.all([
+            fetch(`${API_BASE}/music/history/${selectedGuildId}`, { headers: { 'ngrok-skip-browser-warning': 'true' } }),
+            fetch(`${API_BASE}/music/topsongs/${selectedGuildId}`,{ headers: { 'ngrok-skip-browser-warning': 'true' } }),
+        ]);
+        const histData = await histRes.json();
+        const topData  = await topRes.json();
+        renderRecentlyPlayed(histData.history || []);
+        renderTopSongs(topData.top || []);
+    } catch(e) { console.error('[History]', e); }
+};
+
+function renderRecentlyPlayed(tracks) {
+    const el = document.getElementById('recentlyPlayedList');
+    if (!el) return;
+    if (!tracks.length) {
+        el.innerHTML = '<div class="music-history-empty">No history yet</div>';
+        return;
+    }
+    el.innerHTML = tracks.map(t => `
+        <div class="music-history-item" onclick="musicControl('play','${escQueue(t.url||t.title)}')">
+            <div class="mhi-art" style="${t.artwork ? `background-image:url(${t.artwork})` : 'background:rgba(114,137,218,0.2)'}">
+                ${t.artwork ? '' : '<i class="fa-solid fa-music"></i>'}
+                <div class="mhi-play"><i class="fa-solid fa-play"></i></div>
+            </div>
+            <div class="mhi-info">
+                <span class="mhi-title">${escQueue(t.title)}</span>
+                <span class="mhi-artist">${escQueue(t.artist||'')}</span>
+            </div>
+        </div>`).join('');
+}
+
+function renderTopSongs(tracks) {
+    const el = document.getElementById('topSongsList');
+    if (!el) return;
+    if (!tracks.length) {
+        el.innerHTML = '<div class="music-history-empty">Play some songs first</div>';
+        return;
+    }
+    el.innerHTML = tracks.map((t, i) => `
+        <div class="music-history-item" onclick="musicControl('play','${escQueue(t.url||t.title)}')">
+            <div class="mhi-art" style="${t.artwork ? `background-image:url(${t.artwork})` : 'background:rgba(114,137,218,0.2)'}">
+                ${t.artwork ? '' : `<span style="font-size:11px;font-weight:700;color:var(--primary)">#${i+1}</span>`}
+                <div class="mhi-play"><i class="fa-solid fa-play"></i></div>
+            </div>
+            <div class="mhi-info">
+                <span class="mhi-title">${escQueue(t.title)}</span>
+                <span class="mhi-artist">${escQueue(t.artist||'')} · ${t.plays} play${t.plays!==1?'s':''}</span>
+            </div>
+        </div>`).join('');
 }
 
 /* ================= HELPERS ================= */

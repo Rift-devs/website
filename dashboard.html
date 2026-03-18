@@ -137,6 +137,33 @@
                         </button>
                     </div>
 
+                    <!-- Recently Played + Top Songs -->
+                    <div class="music-history-row" id="musicHistoryRow">
+                        <!-- Recently Played -->
+                        <div class="glass music-history-card" id="recentlyPlayedCard">
+                            <div class="music-history-header">
+                                <span class="music-history-label"><i class="fa-solid fa-clock-rotate-left"></i> Recently Played</span>
+                                <button class="btn-icon btn-sm" onclick="loadMusicHistory()" title="Refresh">
+                                    <i class="fa-solid fa-rotate-right"></i>
+                                </button>
+                            </div>
+                            <div class="music-history-scroll" id="recentlyPlayedList">
+                                <div class="music-history-empty"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                            </div>
+                        </div>
+
+                        <!-- Top Songs -->
+                        <div class="glass music-history-card" id="topSongsCard">
+                            <div class="music-history-header">
+                                <span class="music-history-label"><i class="fa-solid fa-fire"></i> Top Songs</span>
+                                <span class="music-history-sub">This server</span>
+                            </div>
+                            <div class="music-history-scroll" id="topSongsList">
+                                <div class="music-history-empty"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="music-layout" id="musicLayout">
                         
                         <div class="player-main glass" id="panelPlayer">
@@ -327,6 +354,15 @@
                                     <span class="market-news-ticker" id="marketNewsTicker">Loading market news...</span>
                                 </div>
                                 <div class="stocks-header-right">
+                                    <!-- Server selector for stocks -->
+                                    <div class="tab-guild-dropdown" id="stocksGuildDropdown">
+                                        <div class="tab-guild-selected" id="stocksGuildSelected" onclick="toggleTabGuildDropdown('stocks')">
+                                            <i class="fa-solid fa-server"></i>
+                                            <span id="stocksGuildLabel">Select Server</span>
+                                            <i class="fa-solid fa-chevron-down"></i>
+                                        </div>
+                                        <div class="tab-guild-menu hidden" id="stocksGuildMenu"></div>
+                                    </div>
                                     <div class="stocks-scope-selector">
                                         <button class="scope-btn active" id="scopeGlobal" onclick="setStocksScope('global', this)">
                                             <i class="fa-solid fa-globe"></i> Global
@@ -564,6 +600,18 @@
 
                         <!-- LEFT COLUMN -->
                         <div class="mod-left">
+
+                            <!-- Server selector for moderation -->
+                            <div class="mod-server-row">
+                                <div class="tab-guild-dropdown" id="modGuildDropdown">
+                                    <div class="tab-guild-selected" id="modGuildSelected" onclick="toggleTabGuildDropdown('mod')">
+                                        <i class="fa-solid fa-server"></i>
+                                        <span id="modGuildLabel">Select a Server</span>
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </div>
+                                    <div class="tab-guild-menu hidden" id="modGuildMenu"></div>
+                                </div>
+                            </div>
 
                             <!-- Overview Stats -->
                             <div class="mod-stats-row" id="modStatsRow">
