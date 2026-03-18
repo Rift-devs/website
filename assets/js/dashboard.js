@@ -1166,9 +1166,13 @@ function renderLyrics() {
 function updateLyricsGlow() {
     if (lyricsData.length === 0) return;
 
+    // 300ms lookahead — compensates for interpolation drift between polls
+    const LYRIC_OFFSET_MS = 300;
+    const syncTime = localTimeMs + LYRIC_OFFSET_MS;
+
     let targetIndex = -1;
     for (let i = 0; i < lyricsData.length; i++) {
-        if (localTimeMs >= lyricsData[i].time) {
+        if (syncTime >= lyricsData[i].time) {
             targetIndex = i;
         } else {
             break;
