@@ -5088,3 +5088,401 @@ input[type="range"]::-webkit-slider-thumb:hover {
     background: rgba(67,181,129,0.16);
     border-color: rgba(67,181,129,0.4);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   DESIGN REFRESH — Clean, tight, flat. Desktop only (>768px)
+   Overrides the heavy/glowy defaults above.
+   Mobile breakpoints below 768px are not affected.
+═══════════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+
+    /* ── Variables ─────────────────────────── */
+    :root {
+        --glass-bg:     rgba(255,255,255,0.025);
+        --glass-border: rgba(255,255,255,0.06);
+        --sidebar-bg:   #0f0f11;
+        --bg-dark:      #0f0f11;
+        --primary-glow: rgba(114,137,218,0.2);
+    }
+
+    /* ── Body — kill background gradients ──── */
+    body {
+        background-color: #0f0f11;
+        background-image: none;
+    }
+
+    /* ── Stars canvas — subtler ─────────────── */
+    #dashboard-stars-canvas { opacity: 0.12; }
+
+    /* ── Glass container — no blur ──────────── */
+    .glass-container { backdrop-filter: none; }
+
+    /* ── Sidebar — narrower, tighter ────────── */
+    .sidebar {
+        width: 210px;
+        padding: 18px 12px;
+        background: #0f0f11;
+        border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sidebar-header .logo {
+        font-size: 15px;
+        letter-spacing: 1.5px;
+        margin-bottom: 22px;
+        padding: 0 6px;
+        gap: 8px;
+    }
+
+    .sidebar-logo-img {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        box-shadow: none;
+        border: none;
+    }
+
+    /* ── Nav links — compact, flat ───────────── */
+    .nav-links li {
+        padding: 8px 10px;
+        border-radius: 7px;
+        margin-bottom: 1px;
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    .nav-links li i { font-size: 14px; }
+
+    .nav-links li:hover {
+        background: rgba(255,255,255,0.04);
+        box-shadow: none;
+        color: #fff;
+    }
+
+    .nav-links li.active {
+        background: rgba(255,255,255,0.06);
+        border-left: 2px solid var(--primary);
+        color: #fff;
+        box-shadow: none;
+    }
+
+    .nav-coming-soon {
+        padding: 8px 10px;
+        margin-bottom: 1px;
+        border-radius: 7px;
+        gap: 10px;
+        font-size: 13px;
+    }
+    .nav-coming-soon i { font-size: 14px; }
+
+    /* ── Top bar — smaller ───────────────────── */
+    .top-bar {
+        padding: 14px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .top-bar h1 { font-size: 15px; font-weight: 600; }
+
+    .system-status {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        background: transparent;
+        border-color: rgba(255,255,255,0.05);
+        gap: 6px;
+    }
+
+    .status-indicator.online {
+        box-shadow: none;
+        width: 6px; height: 6px;
+    }
+
+    /* ── Content area ────────────────────────── */
+    .content-scroll-area { padding: 14px 18px 18px; }
+
+    /* ── Glass cards — flat, tight ───────────── */
+    .glass {
+        border-radius: 10px;
+        padding: 14px 16px;
+        border-color: rgba(255,255,255,0.055);
+        background: rgba(255,255,255,0.025);
+    }
+
+    .stat-card:hover { transform: none; background: rgba(255,255,255,0.04); }
+    .stat-card i { font-size: 18px; margin-bottom: 8px; }
+    .stat-val { font-size: 22px; }
+    .stat-label { font-size: 12px; letter-spacing: 0.5px; }
+
+    /* ── Music layout ────────────────────────── */
+    .music-layout { height: calc(100vh - 118px); }
+
+    #panelPlayer { border-radius: 10px; margin: 0 3px 0 0; }
+    #panelLyrics { margin: 0 3px; }
+    #panelQueue  { margin: 0 0 0 3px; }
+
+    .player-main { padding: 16px; }
+
+    /* ── Album art — smaller ─────────────────── */
+    .album-art {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        font-size: 32px;
+        box-shadow: none;
+    }
+
+    .now-playing { gap: 14px; padding-bottom: 12px; }
+
+    .track-details h2 { font-size: 16px; margin-bottom: 4px; }
+    .track-details p  { font-size: 13px; }
+
+    /* ── Controls — tighter ──────────────────── */
+    .player-controls { gap: 12px; }
+    .control-buttons { gap: 16px; }
+
+    .btn-main {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+        box-shadow: none;
+    }
+
+    .btn-main:hover {
+        transform: scale(1.05);
+        box-shadow: none;
+    }
+
+    .btn-icon { font-size: 16px; }
+    .btn-icon.btn-sm { font-size: 14px; }
+    .btn-icon:hover { transform: none; color: #fff; }
+
+    .btn-icon.active {
+        color: var(--primary);
+        text-shadow: none;
+    }
+
+    /* ── Seek bar — thinner ──────────────────── */
+    input[type="range"] { height: 3px; }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 12px;
+        height: 12px;
+        box-shadow: none;
+        margin-top: -4px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+        box-shadow: none;
+    }
+
+    .seek-bar-container { font-size: 11px; gap: 10px; }
+
+    /* ── Volume ──────────────────────────────── */
+    .volume-control { gap: 10px; }
+
+    /* ── Search ──────────────────────────────── */
+    .music-search-container { margin: 10px 0 14px; }
+
+    .search-box {
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    .search-box:focus-within {
+        border-color: rgba(114,137,218,0.5);
+        box-shadow: none;
+    }
+
+    .search-box input { font-size: 13px; }
+    .search-results-dropdown { border-radius: 8px; margin-top: 4px; }
+    .search-item { padding: 8px 12px; gap: 10px; }
+    .search-item img { width: 32px; height: 32px; border-radius: 5px; }
+    .search-item-title { font-size: 13px; }
+    .search-item-author { font-size: 11px; }
+
+    /* ── Lyrics panel ────────────────────────── */
+    .lyrics-panel { padding: 16px; }
+    .lyrics-panel h3 { font-size: 11px; margin-bottom: 12px; }
+    .lyric-line { font-size: 17px; margin-bottom: 12px; }
+    .lyric-line.active {
+        font-size: 20px;
+        text-shadow: none;
+        color: #fff;
+    }
+
+    /* ── Queue sidebar ───────────────────────── */
+    .music-sidebar { padding: 14px; }
+
+    .queue-item {
+        padding: 7px 10px;
+        border-radius: 6px;
+        margin-bottom: 2px;
+        background: transparent;
+    }
+
+    .queue-item:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: transparent;
+    }
+
+    .q-title  { font-size: 12px; margin-bottom: 1px; }
+    .q-author { font-size: 11px; }
+    .q-controls { margin-top: 4px; }
+
+    .q-btn:hover {
+        background: var(--primary);
+        box-shadow: none;
+    }
+
+    .q-btn.danger:hover {
+        background: var(--danger);
+        box-shadow: none;
+    }
+
+    /* ── Guild dropdown ──────────────────────── */
+    .guild-dropdown { margin-bottom: 10px; }
+
+    .guild-dropdown-selected {
+        padding: 7px 10px;
+        border-radius: 7px;
+        font-size: 12px;
+    }
+
+    .guild-dropdown-menu { border-radius: 8px; }
+    .guild-dropdown-item { padding: 8px 10px; font-size: 12px; }
+
+    /* ── User card ───────────────────────────── */
+    .user-card {
+        background: transparent;
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        border-radius: 0;
+        padding: 10px 6px 0;
+        gap: 8px;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        box-shadow: none;
+    }
+
+    .user-name { font-size: 12px; }
+    .user-disc { font-size: 10px; }
+
+    /* ── Login btn ───────────────────────────── */
+    .login-btn {
+        border-radius: 7px;
+        padding: 9px;
+        font-size: 13px;
+    }
+
+    .login-btn:hover { box-shadow: none; }
+
+    /* ── CFY bar ─────────────────────────────── */
+    .cfy-bar { padding: 10px 14px; border-radius: 10px; gap: 12px; }
+    .cfy-card { width: 100px; }
+    .cfy-art  { height: 65px; border-radius: 7px; }
+    .cfy-track  { font-size: 11px; }
+    .cfy-artist { font-size: 10px; }
+    .cfy-genre  { font-size: 9px; }
+
+    /* ── History row ─────────────────────────── */
+    .music-history-card { padding: 12px 14px; border-radius: 10px; }
+    .mhi-art { width: 32px; height: 32px; border-radius: 5px; }
+    .mhi-title  { font-size: 11px; }
+    .mhi-artist { font-size: 10px; }
+
+    /* ── Player top row ──────────────────────── */
+    .player-top-row { margin-bottom: 8px; gap: 8px; }
+
+    .fix-audio-btn {
+        padding: 7px 10px;
+        border-radius: 7px;
+        font-size: 12px;
+    }
+
+    /* ── VC prompt ───────────────────────────── */
+    .vc-auto-prompt {
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .vc-auto-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    /* ── Waveform ────────────────────────────── */
+    #waveformCanvas { margin: 8px 0; }
+
+    /* ── Panel resizer ───────────────────────── */
+    .panel-resizer::after { background: rgba(255,255,255,0.05); }
+    .panel-resizer:hover::after,
+    .panel-resizer.dragging::after {
+        background: rgba(255,255,255,0.15);
+        box-shadow: none;
+    }
+
+    /* ── Stocks ──────────────────────────────── */
+    .stocks-header { border-radius: 10px; padding: 12px 16px; }
+    .stocks-header h2 { font-size: 15px; }
+    .stock-chart-card { border-radius: 10px; }
+    .stocks-portfolio-card { border-radius: 10px; }
+    .market-table-card { border-radius: 10px; }
+    .stocks-leaderboard-card { border-radius: 10px; }
+    .portfolio-stat-val { font-size: 15px; }
+
+    /* ── Last.fm ─────────────────────────────── */
+    .lastfm-profile-card { border-radius: 10px; }
+    .lastfm-chart-card   { border-radius: 10px; }
+
+    /* ── Moderation ──────────────────────────── */
+    .mod-stat-card { border-radius: 10px; padding: 10px 14px; }
+    .mod-stat-val  { font-size: 18px; }
+    .mod-log-section { border-radius: 10px; }
+    .mod-action-btn {
+        border-radius: 7px;
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    /* ── Settings ────────────────────────────── */
+    .settings-group { border-radius: 10px; padding: 16px; }
+
+    /* ── Ko-fi ───────────────────────────────── */
+    .kofi-btn { border-radius: 7px; font-size: 11px; padding: 7px 12px; }
+
+    /* ── Section labels in sidebar ───────────── */
+    .sidebar-section-label {
+        font-size: 9px;
+        letter-spacing: 1.5px;
+        padding: 0 8px;
+        margin: 10px 0 4px;
+        color: rgba(255,255,255,0.18);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    /* ── Loading shimmer ─────────────────────── */
+    .loading-shimmer { border-radius: 6px; }
+
+    /* ── Status glow — kill it ───────────────── */
+    .status-indicator.online { box-shadow: none; }
+
+    /* ── Tab guild dropdowns ─────────────────── */
+    .tab-guild-selected { border-radius: 7px; font-size: 12px; padding: 6px 10px; }
+    .tab-guild-menu     { border-radius: 8px; }
+    .tab-guild-item     { border-radius: 5px; font-size: 12px; padding: 7px 10px; }
+
+    /* ── Fade animation — snappier ───────────── */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-pane { animation-duration: 0.2s; }
+
+}
