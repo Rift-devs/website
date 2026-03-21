@@ -46,6 +46,10 @@
                     <i class="fa-solid fa-sliders"></i>
                     <span>Settings</span>
                 </li>
+                <li data-tab="vccall">
+                    <i class="fa-solid fa-phone"></i>
+                    <span>VC Calls</span>
+                </li>
             </ul>
 
             <!-- Ko-fi tip button -->
@@ -101,6 +105,10 @@
                 <button class="mobile-tab" data-maintab="settings" onclick="mobileSwitchTab('settings',this)">
                     <i class="fa-solid fa-sliders"></i>
                     <span>Settings</span>
+                </button>
+                <button class="mobile-tab" data-maintab="vccall" onclick="mobileSwitchTab('vccall',this)">
+                    <i class="fa-solid fa-phone"></i>
+                    <span>Calls</span>
                 </button>
             </nav>
 
@@ -971,9 +979,9 @@
                                 <div class="settings-font-options" id="fontOptions">
                                     <button class="font-opt active" data-font="Outfit" onclick="setFont('Outfit',this)" style="font-family:'Outfit'">Outfit</button>
                                     <button class="font-opt" data-font="Inter" onclick="setFont('Inter',this)" style="font-family:'Inter'">Inter</button>
-                                    <button class="font-opt" data-font="'Space Grotesk'" onclick="setFont(&quot;Space Grotesk&quot;,this)" style="font-family:'Space Grotesk'">Space Grotesk</button>
-                                    <button class="font-opt" data-font="'JetBrains Mono'" onclick="setFont(&quot;JetBrains Mono&quot;,this)" style="font-family:'JetBrains Mono'">JetBrains Mono</button>
-                                    <button class="font-opt" data-font="'DM Sans'" onclick="setFont(&quot;DM Sans&quot;,this)" style="font-family:'DM Sans'">DM Sans</button>
+                                    <button class="font-opt" data-font="'Space Grotesk'" onclick="setFont('Space Grotesk',this)" style="font-family:'Space Grotesk'">Space Grotesk</button>
+                                    <button class="font-opt" data-font="'JetBrains Mono'" onclick="setFont('JetBrains Mono',this)" style="font-family:'JetBrains Mono'">JetBrains Mono</button>
+                                    <button class="font-opt" data-font="'DM Sans'" onclick="setFont('DM Sans',this)" style="font-family:'DM Sans'">DM Sans</button>
                                 </div>
                             </div>
 
@@ -1038,6 +1046,35 @@
                             </div>
                         </div>
 
+                        <!-- VC Call Relay -->
+                        <div class="settings-group glass">
+                            <div class="settings-group-title"><i class="fa-solid fa-phone-volume"></i> VC Call Relay</div>
+
+                            <div class="settings-row">
+                                <div class="settings-row-info">
+                                    <span class="settings-row-label">Live Speaking Visualiser</span>
+                                    <span class="settings-row-desc">Animate audio bars when someone is talking</span>
+                                </div>
+                                <label class="settings-toggle">
+                                    <input type="checkbox" id="prefVcVisualizer" checked
+                                           onchange="savePref('vcVisualizer', this.checked); if(typeof applyVcPrefVisualizer==='function') applyVcPrefVisualizer(this.checked)">
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                </label>
+                            </div>
+
+                            <div class="settings-row">
+                                <div class="settings-row-info">
+                                    <span class="settings-row-label">Speaking Ring Pulse</span>
+                                    <span class="settings-row-desc">Glow ring around avatar when speaking</span>
+                                </div>
+                                <label class="settings-toggle">
+                                    <input type="checkbox" id="prefVcRingPulse" checked
+                                           onchange="savePref('vcRingPulse', this.checked); if(typeof applyVcPrefRingPulse==='function') applyVcPrefRingPulse(this.checked)">
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- Danger zone -->
                         <div class="settings-group glass settings-danger">
                             <div class="settings-group-title"><i class="fa-solid fa-triangle-exclamation"></i> Account</div>
@@ -1062,11 +1099,50 @@
                     </div>
                 </section>
 
-            </div>
-        </main>
-    </div>
+                <section id="vccall" class="tab-pane">
+                    <div class="vc-tab-wrap">
 
-    <!-- Fix Audio Modal -->
+                        <!-- Header -->
+                        <div class="vc-tab-header">
+                            <div class="vc-tab-title-row">
+                                <div class="vc-tab-title-left">
+                                    <i class="fa-solid fa-phone-volume vc-tab-icon"></i>
+                                    <div>
+                                        <h2 class="vc-tab-title">VC Call Relay</h2>
+                                        <p class="vc-tab-sub">Visualiser &amp; controller — audio stays in Discord</p>
+                                    </div>
+                                </div>
+                                <div class="vc-conn-status">
+                                    <div class="vc-conn-dot" id="vcCallDot"></div>
+                                    <span id="vcCallConnStatus">Connecting…</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Guild picker (reuses same guild list) -->
+                        <div class="vc-guild-row glass">
+                            <label class="vc-guild-label"><i class="fa-solid fa-server"></i> Server</label>
+                            <div class="guild-dropdown" id="vcGuildDropdown" style="flex:1;max-width:280px">
+                                <div class="guild-dropdown-selected" id="vcGuildDropdownSelected" onclick="toggleVcGuildDropdown()">
+                                    <span id="vcGuildDropdownText">Select a server…</span>
+                                    <i class="fa-solid fa-chevron-down" style="font-size:11px;opacity:.5"></i>
+                                </div>
+                                <div class="guild-dropdown-menu hidden" id="vcGuildDropdownMenu"></div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic content area -->
+                        <div id="vcCallContent" class="vc-call-content">
+                            <div class="vc-loading">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                <span>Loading…</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+
     <div class="mod-modal-overlay hidden" id="fixModalOverlay" onclick="closeFixModal()">
         <div class="mod-modal glass fix-modal" onclick="event.stopPropagation()">
             <div class="mod-modal-header">
@@ -1132,6 +1208,7 @@
     <script src="assets/js/lastfm.js"></script>
     <script src="assets/js/moderation.js"></script>
     <script src="assets/js/settings.js"></script>
+    <script src="assets/js/vccall.js"></script>
     <script>
         function openSidebar() {
             document.getElementById('sidebar').classList.add('open');
@@ -1156,7 +1233,7 @@
             if (btn) btn.classList.add('active');
             // Update top bar title
             const titles = { music:'Music Player', stocks:'Stock Market', lastfm:'Last.fm',
-                             moderation:'Moderation & Analytics', settings:'Settings' };
+                             moderation:'Moderation & Analytics', settings:'Settings', vccall:'VC Calls' };
             const titleEl = document.getElementById('activeTabTitle');
             if (titleEl) titleEl.textContent = titles[tab] || tab;
             // Fire init hooks
@@ -1164,6 +1241,7 @@
             if (tab === 'lastfm'     && typeof window.initLastfm     === 'function') window.initLastfm();
             if (tab === 'moderation' && typeof window.initModeration === 'function') window.initModeration();
             if (tab === 'settings'   && typeof window.initSettings   === 'function') window.initSettings();
+            if (tab === 'vccall'     && typeof window.initVcCall     === 'function') window.initVcCall();
             // Also sync desktop sidebar nav highlight
             document.querySelectorAll('.nav-links li').forEach(l => {
                 l.classList.toggle('active', l.dataset.tab === tab);

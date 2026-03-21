@@ -150,7 +150,7 @@ function initTabs() {
             document.getElementById(target).classList.add('active');
 
             const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm',
-                             moderation: 'Moderation & Analytics', settings: 'Settings' };
+                             moderation: 'Moderation & Analytics', settings: 'Settings', vccall: 'VC Calls' };
             document.getElementById('activeTabTitle').textContent = titles[target] || target;
 
             // Sync mobile bottom nav highlight
@@ -162,6 +162,7 @@ function initTabs() {
             if (target === 'lastfm'     && typeof window.initLastfm     === 'function') window.initLastfm();
             if (target === 'moderation' && typeof window.initModeration === 'function') window.initModeration();
             if (target === 'settings'   && typeof window.initSettings   === 'function') window.initSettings();
+            if (target === 'vccall'     && typeof window.initVcCall     === 'function') window.initVcCall();
 
             if (window.innerWidth <= 768) closeSidebar();
         });
