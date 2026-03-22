@@ -51,8 +51,9 @@ async function loadModStats() {
         if (cached) { _renderModStats(cached); return; }
     }
     try {
+        const _tok = localStorage.getItem('d_token') || '';
         const res = await fetch(`${API_BASE}/mod/stats/${modGuildId}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${_tok}` }
         });
         const data = await res.json();
         if (data.error) return;
@@ -150,7 +151,7 @@ async function fetchAutocomplete(q) {
     if (!API_BASE || !modGuildId) return;
     try {
         const res = await fetch(`${API_BASE}/mod/members/${modGuildId}?q=${encodeURIComponent(q)}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${localStorage.getItem('d_token') || ''}` }
         });
         const data = await res.json();
         showAutocomplete(data.members || []);
@@ -219,7 +220,7 @@ window.lookupUser = async function() {
 
     try {
         const res = await fetch(`${API_BASE}/mod/user/${modGuildId}?q=${encodeURIComponent(q)}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${localStorage.getItem('d_token') || ''}` }
         });
         const data = await res.json();
         if (data.error) {
@@ -391,7 +392,7 @@ async function relookupCurrentUser() {
     if (!modActionTarget) return;
     const q = modActionTarget.id;
     const res = await fetch(`${API_BASE}/mod/user/${modGuildId}?q=${q}`, {
-        headers: {'ngrok-skip-browser-warning':'true'}
+        headers: {'ngrok-skip-browser-warning':'true', 'Authorization': `Bearer ${localStorage.getItem('d_token') || ''}`}
     });
     const data = await res.json();
     if (!data.error) {
@@ -633,9 +634,10 @@ async function modApiAction(action, targetId, reason, opts = {}, extra = {}) {
     try {
         const gid = modGuildId; // keep as string — server does int() which handles it fine
         if (!gid) return { error: 'No server selected' };
+        const token = localStorage.getItem('d_token') || '';
         const res = await fetch(`${API_BASE}/mod/action`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+            headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({
                 guild_id: gid,
                 mod_id: userProfile?.id || 0,
@@ -661,8 +663,9 @@ window.loadBanList = async function() {
     const el = document.getElementById('modBanList');
     el.innerHTML = '<div class="loading-shimmer"></div>';
     try {
+        const _tok2 = localStorage.getItem('d_token') || '';
         const res = await fetch(`${API_BASE}/mod/bans/${modGuildId}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${_tok2}` }
         });
         const data = await res.json();
         modAllBans = data.bans || [];
@@ -726,7 +729,7 @@ window.loadModLog = async function() {
 
     try {
         const res = await fetch(`${API_BASE}/mod/logs/${modGuildId}?${params}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${localStorage.getItem('d_token') || ''}` }
         });
         const data = await res.json();
         modLogTotal = data.total || 0;
@@ -810,7 +813,7 @@ async function loadRoles() {
     }
     try {
         const res = await fetch(`${API_BASE}/mod/roles/${modGuildId}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${localStorage.getItem('d_token') || ''}` }
         });
         const data = await res.json();
         modRoles = data.roles || [];
@@ -887,7 +890,7 @@ async function loadServerAnalytics() {
     });
     try {
         const res = await fetch(`${API_BASE}/analytics/${modGuildId}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${localStorage.getItem('d_token') || ''}` }
         });
         const data = await res.json();
         if (data.error) return;

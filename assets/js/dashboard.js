@@ -848,7 +848,61 @@ async function updateMusicState() {
                 currentTrackUri = data.current.uri;
                 fetchLyrics(data.current.title, data.current.author);
             }
+
+            // Browser Media Session API
+            // Shows track in OS/browser media controls (taskbar, lock screen,
+            // browser tab, Bluetooth buttons, headphones, etc.)
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title:  data.current.title  || 'Unknown',
+                    artist: data.current.author || 'Unknown',
+                    album:  'Rift Music',
+                    artwork: data.current.artwork
+                        ? [{ src: data.current.artwork, sizes: '512x512', type: 'image/jpeg' }]
+                        : [],
+                });
+                navigator.mediaSession.playbackState = data.paused ? 'paused' : 'playing';
+
+                // Wire OS media buttons to bot controls
+                navigator.mediaSession.setActionHandler('play',         () => musicControl('toggle'));
+                navigator.mediaSession.setActionHandler('pause',        () => musicControl('toggle'));
+                navigator.mediaSession.setActionHandler('nexttrack',    () => musicControl('skip'));
+                navigator.mediaSession.setActionHandler('previoustrack',() => musicControl('prev'));
+                navigator.mediaSession.setActionHandler('stop',         () => musicControl('stop'));
+
+                // Keep a near-silent audio element looping so the browser
+                // maintains the media session even while the bot plays remotely.
+                if (!window._riftAudioEl) {
+                    const _a = new Audio();
+                    _a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+                    _a.loop   = true;
+                    _a.volume = 0.001;
+                    window._riftAudioEl = _a;
+                }
+                if (data.paused) {
+                    window._riftAudioEl.pause();
+                } else {
+                    window._riftAudioEl.play().catch(() => {});
+                }
+
+                // Update the OS seek bar position
+                if (data.current.duration > 0) {
+                    try {
+                        navigator.mediaSession.setPositionState({
+                            duration:     data.current.duration,
+                            playbackRate: 1,
+                            position:     Math.min(localTimeMs / 1000, data.current.duration),
+                        });
+                    } catch (_) {}
+                }
+            }
         } else {
+            // Clear browser media session when nothing is playing
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = null;
+                navigator.mediaSession.playbackState = 'none';
+                if (window._riftAudioEl) window._riftAudioEl.pause();
+            }
             isPlaying = false;
             resetPlayer();
         }
