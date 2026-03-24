@@ -150,7 +150,7 @@ function initTabs() {
             document.getElementById(target).classList.add('active');
 
             const titles = { music: 'Music Player', stocks: 'Stock Market', lastfm: 'Last.fm',
-                             moderation: 'Moderation & Analytics', settings: 'Settings', vccall: 'VC Calls' };
+                             settings: 'Settings', vccall: 'VC Calls' };
             document.getElementById('activeTabTitle').textContent = titles[target] || target;
 
             // Sync mobile bottom nav highlight
@@ -162,7 +162,6 @@ function initTabs() {
             const _tabScripts = {
                 stocks:     ['assets/js/stocks.js',     () => window.initStocks?.()],
                 lastfm:     ['assets/js/lastfm.js',     () => window.initLastfm?.()],
-                moderation: ['assets/js/moderation.js', () => window.initModeration?.()],
                 settings:   ['assets/js/settings.js',   () => window.initSettings?.()],
                 vccall:     ['assets/js/vccall.js',     () => window.initVcCall?.()],
             };
@@ -482,16 +481,16 @@ async function fetchGuilds(token) {
 
     renderServerGrid(adminGuilds);
 
-    // Populate tab-specific guild dropdowns (stocks + moderation)
+    // Populate tab-specific guild dropdowns (stocks)
     populateTabGuildDropdowns(adminGuilds);
 }
 
-/* ── Tab Guild Dropdowns (Stocks + Moderation) ──────────────── */
+/* ── Tab Guild Dropdowns (Stocks) ──────────────── */
 let _allGuilds = [];
 
 function populateTabGuildDropdowns(guilds) {
     _allGuilds = guilds;
-    ['stocks', 'mod'].forEach(tab => {
+    ['stocks'].forEach(tab => {
         const menu = document.getElementById(`${tab}GuildMenu`);
         if (!menu) return;
         menu.innerHTML = guilds.map(g => {
@@ -532,13 +531,6 @@ window.selectTabGuild = function(tab, guildId, guildName, iconUrl) {
         window._selectedGuildId = guildId;
         window._stocksGuildId   = guildId;
         if (typeof window.initStocks === 'function') window.initStocks();
-    } else if (tab === 'mod') {
-        window._modGuildId = guildId;
-        // Also sync modGuildId in moderation module
-        if (typeof window.initModeration === 'function') {
-            window._selectedGuildId = guildId;
-            window.initModeration();
-        }
     }
 };
 
