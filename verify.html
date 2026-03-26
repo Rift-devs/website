@@ -232,7 +232,7 @@
             const token = urlParams.get('t');
 
             if (!token) {
-                showError("Invalid Session", "No verification token provided. Please request a new link from the bot.");
+                showError("Invalid Session", "No verification token provided. Trying to find an easter egg? You won't find any..?");
                 return;
             }
 
@@ -258,9 +258,9 @@
                     showSuccess();
                 } else {
                     if (result.flagged) {
-                        showError("Security Alert", result.error || "Blocked due to potential ban evasion.");
+                        showError("Security Alert", result.error || "Blocked due to potential ban evasion. :(");
                     } else {
-                        showError("Verification Failed", result.error || "Something went wrong.");
+                        showError("Verification Failed", result.error || "Something went wrong...How did you manage to find this though?");
                     }
                 }
             } catch (err) {
@@ -275,7 +275,7 @@
             icon.style.transform = 'scale(1.1)';
             
             document.getElementById('title').innerText = "Verified Successfully";
-            document.getElementById('message').innerText = "Security check passed. Your roles have been updated in Discord.";
+            document.getElementById('message').innerText = "Security check passed. You may close this window.";
             document.getElementById('status').innerHTML = '<span class="success-text"><i class="fas fa-check"></i> Verification Complete</span>';
         }
 
