@@ -680,13 +680,13 @@
                     <div class="mod-layout">
                         <div class="mod-left">
                             <div class="mod-server-row">
-                                <div class="tab-guild-dropdown" id="modGuildDropdown">
-                                    <div class="tab-guild-selected" id="modGuildSelected" onclick="toggleTabGuildDropdown('mod')">
+                                <div class="tab-guild-dropdown" id="moderationGuildDropdown">
+                                    <div class="tab-guild-selected" id="moderationGuildSelected" onclick="toggleTabGuildDropdown('moderation')">
                                         <i class="fa-solid fa-server"></i>
-                                        <span id="modGuildLabel">Select a Server</span>
+                                        <span id="moderationGuildLabel">Select a Server</span>
                                         <i class="fa-solid fa-chevron-down"></i>
                                     </div>
-                                    <div class="tab-guild-menu hidden" id="modGuildMenu"></div>
+                                    <div class="tab-guild-menu hidden" id="moderationGuildMenu"></div>
                                 </div>
                             </div>
 
@@ -800,13 +800,21 @@
                                         <tr>
                                             <th>User</th>
                                             <th>Matched With</th>
+                                            <th>Fingerprint</th>
                                             <th>Time</th>
                                         </tr>
                                     </thead>
                                     <tbody id="vFlagsList">
-                                        <tr><td colspan="3" class="v-empty">Select a server to view flagged users</td></tr>
+                                        <tr><td colspan="4" class="v-empty">Select a server to view flagged users</td></tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <div class="glass v-history-card">
+                            <span class="mod-section-label"><i class="fa-solid fa-scroll"></i> Recent Verifications</span>
+                            <div id="vHistoryList" class="v-history-list">
+                                <div class="v-empty">Select a server to view history</div>
                             </div>
                         </div>
                     </div>
