@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="dark-theme">
-    <canvas id="dashboard-stars-canvas"></canvas>
+    <!-- Star canvas removed for minimalist solid dark theme -->
 
     <div class="glass-container">
         <nav class="sidebar" id="sidebar">
@@ -29,6 +29,14 @@
                 <li class="active" data-tab="music">
                     <i class="fa-solid fa-music"></i>
                     <span>Music Player</span>
+                </li>
+                <li data-tab="moderation">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Moderation</span>
+                </li>
+                <li data-tab="verification">
+                    <i class="fa-solid fa-user-check"></i>
+                    <span>Verification</span>
                 </li>
                 <li data-tab="stocks">
                     <i class="fa-solid fa-chart-line"></i>
@@ -87,26 +95,30 @@
                     <i class="fa-solid fa-music"></i>
                     <span>Music</span>
                 </button>
+                <button class="mobile-tab" data-maintab="moderation" onclick="mobileSwitchTab('moderation',this)">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Mod</span>
+                </button>
+                <button class="mobile-tab" data-maintab="verification" onclick="mobileSwitchTab('verification',this)">
+                    <i class="fa-solid fa-user-check"></i>
+                    <span>Verify</span>
+                </button>
                 <button class="mobile-tab" data-maintab="stocks" onclick="mobileSwitchTab('stocks',this)">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Stocks</span>
                 </button>
                 <button class="mobile-tab" data-maintab="lastfm" onclick="mobileSwitchTab('lastfm',this)">
                     <i class="fa-solid fa-headphones"></i>
-                    <span>Last.fm</span>
+                    <span>FM</span>
                 </button>
->
                 <button class="mobile-tab" data-maintab="settings" onclick="mobileSwitchTab('settings',this)">
                     <i class="fa-solid fa-sliders"></i>
                     <span>Settings</span>
                 </button>
-                <button class="mobile-tab" data-maintab="vccall" onclick="mobileSwitchTab('vccall',this)">
-                    <i class="fa-solid fa-phone"></i>
-                    <span>Calls</span>
-                </button>
             </nav>
 
             <div class="content-scroll-area">
+                <!-- Music Section -->
                 <section id="music" class="tab-pane active">
 
                     <!-- Chosen For You bar -->
@@ -661,6 +673,145 @@
                 <!-- ══════════════════════════════════════ -->
                 <!--  SETTINGS TAB                          -->
                 <!-- ══════════════════════════════════════ -->
+                </section>
+
+                <!-- Moderation Section -->
+                <section id="moderation" class="tab-pane">
+                    <div class="mod-layout">
+                        <div class="mod-left">
+                            <div class="mod-server-row">
+                                <div class="tab-guild-dropdown" id="modGuildDropdown">
+                                    <div class="tab-guild-selected" id="modGuildSelected" onclick="toggleTabGuildDropdown('mod')">
+                                        <i class="fa-solid fa-server"></i>
+                                        <span id="modGuildLabel">Select a Server</span>
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </div>
+                                    <div class="tab-guild-menu hidden" id="modGuildMenu"></div>
+                                </div>
+                            </div>
+
+                            <div class="mod-stats-row" id="modStatsRow">
+                                <div class="mod-stat-card glass">
+                                    <i class="fa-solid fa-gavel"></i>
+                                    <div><span class="mod-stat-val" id="modTotalCases">—</span><span class="mod-stat-label">Total Cases</span></div>
+                                </div>
+                                <div class="mod-stat-card glass">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <div><span class="mod-stat-val" id="modTotalWarns">—</span><span class="mod-stat-label">Warns</span></div>
+                                </div>
+                                <div class="mod-stat-card glass">
+                                    <i class="fa-solid fa-hammer"></i>
+                                    <div><span class="mod-stat-val" id="modTotalBans">—</span><span class="mod-stat-label">Bans</span></div>
+                                </div>
+                                <div class="mod-stat-card glass">
+                                    <i class="fa-solid fa-clock"></i>
+                                    <div><span class="mod-stat-val" id="modTotalTimeouts">—</span><span class="mod-stat-label">Timeouts</span></div>
+                                </div>
+                            </div>
+
+                            <div class="glass mod-activity-card">
+                                <span class="mod-section-label"><i class="fa-solid fa-chart-bar"></i> Activity</span>
+                                <canvas id="modActivityChart" height="100"></canvas>
+                            </div>
+
+                            <div class="glass mod-lookup-card">
+                                <span class="mod-section-label"><i class="fa-solid fa-user-magnifying-glass"></i> User Lookup</span>
+                                <div class="mod-search-row">
+                                    <div class="mod-search-wrap">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                        <input type="text" id="modUserInput" placeholder="Search user ID or name..." autocomplete="off">
+                                        <div class="mod-autocomplete hidden" id="modAutocomplete"></div>
+                                    </div>
+                                    <button class="mod-lookup-btn" onclick="lookupUser()">Lookup</button>
+                                </div>
+
+                                <div id="modUserProfile" class="mod-user-profile hidden">
+                                    <div class="mod-user-header">
+                                        <img id="modUserAvatar" src="" alt="" class="mod-user-avatar">
+                                        <div class="mod-user-info">
+                                            <div class="mod-user-name-row">
+                                                <span class="mod-user-display" id="modUserDisplay"></span>
+                                                <span class="mod-user-tag" id="modUserTag"></span>
+                                            </div>
+                                            <div class="mod-user-badges" id="modUserBadges"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mod-user-roles" id="modUserRoles"></div>
+                                    <div class="mod-user-tabs">
+                                        <button class="mod-user-tab active" data-panel="warns" onclick="switchUserTab('warns',this)">Warnings <span id="modWarnCount"></span></button>
+                                        <button class="mod-user-tab" data-panel="history" onclick="switchUserTab('history',this)">History</button>
+                                    </div>
+                                    <div id="modUserPanelWarns" class="mod-user-panel active">
+                                        <div id="modWarnsList"></div>
+                                    </div>
+                                    <div id="modUserPanelHistory" class="mod-user-panel">
+                                        <div id="modHistoryList"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mod-right">
+                            <div class="glass mod-action-card">
+                                <span class="mod-section-label"><i class="fa-solid fa-bolt"></i> Actions</span>
+                                <div class="mod-target-row">
+                                    <div class="mod-target-display" id="modActionTarget">No user selected</div>
+                                </div>
+                                <div class="mod-action-grid">
+                                    <button class="mod-action-btn warn" onclick="openActionModal('warn')">Warn</button>
+                                    <button class="mod-action-btn timeout" onclick="openActionModal('timeout')">Timeout</button>
+                                    <button class="mod-action-btn kick" onclick="openActionModal('kick')">Kick</button>
+                                    <button class="mod-action-btn ban" onclick="openActionModal('ban')">Ban</button>
+                                </div>
+                            </div>
+
+                            <div class="glass mod-bans-card">
+                                <span class="mod-section-label"><i class="fa-solid fa-ban"></i> Active Bans</span>
+                                <div id="modBanList" class="mod-ban-list"></div>
+                            </div>
+                        </div>
+
+                        <div class="mod-log-section glass">
+                            <span class="mod-section-label"><i class="fa-solid fa-scroll"></i> Recent Logs</span>
+                            <div id="modLogList" class="mod-log-list"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Verification Section -->
+                <section id="verification" class="tab-pane">
+                    <div class="verification-layout">
+                        <div class="mod-server-row">
+                            <div class="tab-guild-dropdown" id="verificationGuildDropdown">
+                                <div class="tab-guild-selected" id="verificationGuildSelected" onclick="toggleTabGuildDropdown('verification')">
+                                    <i class="fa-solid fa-server"></i>
+                                    <span id="verificationGuildLabel">Select a Server</span>
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </div>
+                                <div class="tab-guild-menu hidden" id="verificationGuildMenu"></div>
+                            </div>
+                        </div>
+
+                        <div class="glass v-flags-card">
+                            <span class="mod-section-label"><i class="fa-solid fa-triangle-exclamation"></i> Flagged Users</span>
+                            <div class="v-flags-table-wrap">
+                                <table class="v-table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Matched With</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vFlagsList">
+                                        <tr><td colspan="3" class="v-empty">Select a server to view flagged users</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="settings" class="tab-pane">
                     <div class="settings-layout">
 
@@ -989,6 +1140,8 @@
     <script src="assets/js/dashboard.js"></script>
     <script src="assets/js/stocks.js"></script>
     <script src="assets/js/lastfm.js"></script>
+    <script src="assets/js/moderation.js"></script>
+    <script src="assets/js/verification.js"></script>
 
     <script src="assets/js/settings.js"></script>
     <script src="assets/js/vccall.js"></script>
@@ -1015,14 +1168,16 @@
             document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
             if (btn) btn.classList.add('active');
             // Update top bar title
-            const titles = { music:'Music Player', stocks:'Stock Market', lastfm:'Last.fm', settings:'Settings', vccall:'VC Calls' };
+            const titles = { music:'Music Player', moderation:'Moderation', verification:'Verification Log', stocks:'Stock Market', lastfm:'Last.fm', settings:'Settings', vccall:'VC Calls' };
             const titleEl = document.getElementById('activeTabTitle');
             if (titleEl) titleEl.textContent = titles[tab] || tab;
             // Fire init hooks
-            if (tab === 'stocks'     && typeof window.initStocks     === 'function') window.initStocks();
-            if (tab === 'lastfm'     && typeof window.initLastfm     === 'function') window.initLastfm();
-            if (tab === 'settings'   && typeof window.initSettings   === 'function') window.initSettings();
-            if (tab === 'vccall'     && typeof window.initVcCall     === 'function') window.initVcCall();
+            if (tab === 'moderation'   && typeof window.initModeration   === 'function') window.initModeration();
+            if (tab === 'verification' && typeof window.initVerification === 'function') window.initVerification();
+            if (tab === 'stocks'       && typeof window.initStocks       === 'function') window.initStocks();
+            if (tab === 'lastfm'       && typeof window.initLastfm       === 'function') window.initLastfm();
+            if (tab === 'settings'     && typeof window.initSettings     === 'function') window.initSettings();
+            if (tab === 'vccall'       && typeof window.initVcCall       === 'function') window.initVcCall();
             // Also sync desktop sidebar nav highlight
             document.querySelectorAll('.nav-links li').forEach(l => {
                 l.classList.toggle('active', l.dataset.tab === tab);
