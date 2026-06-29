@@ -1,0 +1,185 @@
+name: Discord Notifications
+
+on:
+  push:
+  pull_request:
+  issues:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Send Discord Webhook
+        shell: bash
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+        run: |
+          REPO="${{ github.repository }}"
+          EVENT="${{ github.event_name }}"
+          ACTOR="${{ github.actor }}"
+          AVATAR="https://github.com/${ACTOR}.png"
+          TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          BOT_NAME="GitHub Updates • ${ACTOR}"
+          BOT_AVATAR="${AVATAR}"
+
+          COLOR=5814783
+          TITLE="📦 GitHub Event"
+          DESC="Triggered event"
+          URL="https://github.com/${REPO}"
+          REF="-"
+          EXTRA="N/A"
+
+          CONTENT="📦 GitHub activity by ${ACTOR}"
+
+          # -----------------------------
+          # PUSH EVENT
+          # -----------------------------
+          if [ "$EVENT" = "push" ]; then
+            COLOR=3066993
+            TITLE="🚀 New Push"
+
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            COMMIT_SHA="${{ github.sha }}"
+            SHORT_SHA=${COMMIT_SHA:0:7}
+            BRANCH="${{ github.ref_name }}"
+
+            URL="https://github.com/${REPO}/commit/${COMMIT_SHA}"
+            DESC="${COMMIT_MSG}"
+            REF="$SHORT_SHA"
+            EXTRA="🌿 Branch: ${BRANCH}"
+
+            CONTENT="🚀 New commit by ${ACTOR}"
+
+          # -----------------------------
+          # PULL REQUEST
+          # -----------------------------
+          elif [ "$EVENT" = "pull_request" ]; then
+            COLOR=15105570
+            TITLE="🔀 Pull Request (${{ github.event.action }})"
+
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_NUM="${{ github.event.pull_request.number }}"
+            PR_STATE="${{ github.event.pull_request.state }}"
+
+            URL="${{ github.event.pull_request.html_url }}"
+            DESC="${PR_TITLE}"
+            REF="PR #${PR_NUM}"
+            EXTRA="📌 Status: ${PR_STATE}"
+
+            CONTENT="🔀 Pull request activity by ${ACTOR}"
+
+          # -----------------------------
+          # ISSUES
+          # -----------------------------
+          elif [ "$EVENT" = "issues" ]; then
+            COLOR=15158332
+            TITLE="🐛 Issue (${{ github.event.action }})"
+
+            ISSUE_TITLE="${{ github.event.issue.title }}"
+            ISSUE_NUM="${{ github.event.issue.number }}"
+
+            URL="${{ github.event.issue.html_url }}"
+            DESC="${ISSUE_TITLE}"
+            REF="Issue #${ISSUE_NUM}"
+            EXTRA="📣 Action: ${{ github.event.action }}"
+
+            CONTENT="🐛 Issue activity by ${ACTOR}"
+          fi
+
+          # -----------------------------
+          # FOOTER ROTATION
+          # -----------------------------
+          FOOTERS=(
+            "Powered by GitHub Actions ⚡"
+            "Another event just dropped 👀"
+            "Tracking activity in ${REPO}"
+            "Automated with ❤️"
+            "GitHub → Discord bridge active"
+            "CI/CD never sleeps 🌙"
+          )
+
+          FOOTER=${FOOTERS[$RANDOM % ${#FOOTERS[@]}]}
+
+          # -----------------------------
+          # BUILD DISCORD PAYLOAD
+          # -----------------------------
+          JSON_PAYLOAD=$(jq -n \
+            --arg content "$CONTENT" \
+            --arg username "$BOT_NAME" \
+            --arg avatar "$BOT_AVATAR" \
+            --arg title "$TITLE" \
+            --arg url "$URL" \
+            --arg desc "$DESC" \
+            --arg actor "$ACTOR" \
+            --arg avatar2 "$AVATAR" \
+            --arg repo "$REPO" \
+            --arg event "$EVENT" \
+            --arg ref "$REF" \
+            --arg extra "$EXTRA" \
+            --arg footer "$FOOTER" \
+            --arg time "$TIME" \
+            --argjson color "$COLOR" \
+            '{
+              content: $content,
+              username: $username,
+              avatar_url: $avatar,
+              embeds: [{
+                title: $title,
+                url: $url,
+                description: $desc,
+                color: $color,
+
+                author: {
+                  name: $actor,
+                  icon_url: $avatar2,
+                  url: ("https://github.com/" + $actor)
+                },
+
+                thumbnail: {
+                  url: $avatar2
+                },
+
+                fields: [
+                  {
+                    name: "📦 Repository",
+                    value: $repo,
+                    inline: true
+                  },
+                  {
+                    name: "⚡ Event",
+                    value: $event,
+                    inline: true
+                  },
+                  {
+                    name: "🔢 Reference",
+                    value: $ref,
+                    inline: true
+                  },
+                  {
+                    name: "🔍 Extra Info",
+                    value: $extra,
+                    inline: false
+                  }
+                ],
+
+                footer: {
+                  text: $footer
+                },
+
+                timestamp: $time
+              }]
+            }')
+
+          # -----------------------------
+          # SEND TO DISCORD
+          # -----------------------------
+          curl -sS \
+            -H "Content-Type: application/json" \
+            -d "$JSON_PAYLOAD" \
+            "$DISCORD_WEBHOOK"
