@@ -1,7 +1,7 @@
 // API is permanently at api.rift.baby via Cloudflare Worker — no Gist needed.
 const CLIENT_ID = "1329184069426348052";
-const API_BASE  = "https://api.rift.baby/api";
-const WS_URL    = "wss://api.rift.baby/ws";
+const API_BASE  = "https://api.rift.baby:24633/api";
+const WS_URL    = "wss://api.rift.baby:24633/ws";
 console.log('[Config] API_BASE=https://api.rift.baby/api (static)');
 
 async function loadConfig() {
